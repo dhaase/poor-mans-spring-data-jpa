@@ -27,11 +27,9 @@ public class Main {
         Type superclass = IPersonReadOnlyRepository.class.getGenericInterfaces()[0];
         if (superclass instanceof ParameterizedType) {
             Type[] actualTypeArguments = ((ParameterizedType) superclass).getActualTypeArguments();
-            if (actualTypeArguments[0] instanceof Class) {
+            if ((actualTypeArguments.length == 2) && (actualTypeArguments[0] instanceof Class)) {
                 inferedEntityType = (Class<?>) actualTypeArguments[0];
                 inferedIDType = (Class<?>) actualTypeArguments[1];
-                System.out.println(inferedEntityType);
-                System.out.println(inferedIDType);
             } else {
                 throw new IllegalStateException("Can not instantiate a generic type.");
             }
@@ -39,8 +37,9 @@ public class Main {
             throw new IllegalStateException("Can not instantiate a raw type.");
         }
 
+        final TypeDescription.Generic.Builder subclassBuilder = TypeDescription.Generic.Builder.parameterizedType(GenericReadOnlyRepository.class, inferedEntityType, inferedIDType);
         Class<?> dynamicType2 = new ByteBuddy()
-                .subclass(TypeDescription.Generic.Builder.parameterizedType(GenericReadOnlyRepository.class, inferedEntityType, inferedIDType).build())
+                .subclass(subclassBuilder.build())
                 .make()
                 .load(Main.class.getClassLoader())
                 .getLoaded();

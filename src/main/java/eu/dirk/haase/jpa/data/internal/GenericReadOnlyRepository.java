@@ -17,7 +17,7 @@ public abstract class GenericReadOnlyRepository<T, ID> implements ReadOnlyReposi
         Type superclass = getClass().getGenericSuperclass();
         if (superclass instanceof ParameterizedType) {
             Type[] actualTypeArguments = ((ParameterizedType) superclass).getActualTypeArguments();
-            if (actualTypeArguments[0] instanceof Class) {
+            if ((actualTypeArguments.length == 2) && (actualTypeArguments[0] instanceof Class)) {
                 inferedEntityType = (Class<T>) actualTypeArguments[0];
                 inferedIDType = (Class<ID>) actualTypeArguments[1];
                 System.out.println(inferedEntityType);
