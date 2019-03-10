@@ -2,6 +2,7 @@ package eu.dirk.haase.hibernate.jdbc;
 
 import org.hibernate.Session;
 
+import javax.persistence.EntityManager;
 import java.lang.ref.Reference;
 import java.sql.*;
 import java.util.Map;
@@ -11,29 +12,17 @@ import java.util.concurrent.Executor;
 public class HibernateConnection implements Connection {
 
     private final Connection delegate;
-    private Reference<Connection> connectionReference;
-    private Reference<Session> sessionReference;
+    private HibernateReference<EntityManager> entityManagerReference;
+    private HibernateReference<Session> sessionReference;
 
     public HibernateConnection(final Connection delegate) {
         this.delegate = delegate;
         System.out.println("----------- Connection -------------");
     }
 
-    public void flush() {
-        final Session session = (sessionReference != null ? sessionReference.get() : null);
-        if (session != null) {
-            session.flush();
-        }
-    }
-
-    public void setSessionReference(final Reference<Session> sessionReference, final Reference<Connection> connectionReference) {
-        this.connectionReference = connectionReference;
-        this.sessionReference = sessionReference;
-    }
-
     @Override
     public void abort(Executor executor) throws SQLException {
-        clearSessionReference();
+        unlink();
         delegate.abort(executor);
     }
 
@@ -44,18 +33,9 @@ public class HibernateConnection implements Connection {
 
     @Override
     public void close() throws SQLException {
-        System.out.println("connection.close: " + (sessionReference == null ? null : sessionReference.get()) + ": " + this);
-        clearSessionReference();
+        System.out.println("connection.close: " + (sessionReference == null ? null : sessionReference.sessionReference.get()) + ": " + this);
+        unlink();
         delegate.close();
-    }
-
-    private void clearSessionReference() {
-        if (this.connectionReference != null) {
-            this.connectionReference.clear();
-        }
-        if (this.sessionReference != null) {
-            this.sessionReference.clear();
-        }
     }
 
     @Override
@@ -106,6 +86,15 @@ public class HibernateConnection implements Connection {
     @Override
     public Struct createStruct(String typeName, Object[] attributes) throws SQLException {
         return delegate.createStruct(typeName, attributes);
+    }
+
+    private void flush() {
+        if (this.sessionReference != null) {
+            this.sessionReference.flush();
+        }
+        if (this.entityManagerReference != null) {
+            this.entityManagerReference.flush();
+        }
     }
 
     @Override
@@ -220,7 +209,18 @@ public class HibernateConnection implements Connection {
 
     @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException {
+        if (iface.isInstance(this)) {
+            return true;
+        }
         return delegate.isWrapperFor(iface);
+    }
+
+    public void linkEntityManager(final Reference<EntityManager> entityManagerReference, final Reference<Connection> connectionReference) {
+        this.entityManagerReference = new HibernateReference<>(entityManagerReference, connectionReference);
+    }
+
+    public void linkSession(final Reference<Session> sessionReference, final Reference<Connection> connectionReference) {
+        this.sessionReference = new HibernateReference<>(sessionReference, connectionReference);
     }
 
     @Override
@@ -308,6 +308,15 @@ public class HibernateConnection implements Connection {
         return delegate.setSavepoint(name);
     }
 
+    private void unlink() {
+        if (this.sessionReference != null) {
+            this.sessionReference.clear();
+        }
+        if (this.entityManagerReference != null) {
+            this.entityManagerReference.clear();
+        }
+    }
+
     @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
         if (iface.isInstance(this)) {
@@ -315,5 +324,29 @@ public class HibernateConnection implements Connection {
         }
         return delegate.unwrap(iface);
     }
+
+    static class HibernateReference<T> {
+        final Reference<Connection> connectionReference;
+        final Reference<T> sessionReference;
+        HibernateReference(final Reference<T> sessionReference, final Reference<Connection> connectionReference) {
+            this.sessionReference = sessionReference;
+            this.connectionReference = connectionReference;
+        }
+
+        public void clear() {
+            connectionReference.clear();
+            sessionReference.clear();
+        }
+
+        public void flush() {
+            final T session = (sessionReference != null ? sessionReference.get() : null);
+            if (session instanceof Session) {
+                ((Session)session).flush();
+            }
+            if (session instanceof EntityManager) {
+                ((EntityManager)session).flush();
+            }
+        }
+        }
 
 }

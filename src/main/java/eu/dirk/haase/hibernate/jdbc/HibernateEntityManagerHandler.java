@@ -4,24 +4,30 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.jdbc.Work;
 
+import javax.persistence.EntityManager;
+import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
-import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-public class HibernateSessionHandler extends AbstractHibernateSessionHandler<Session> {
+public class HibernateEntityManagerHandler extends AbstractHibernateSessionHandler<EntityManager> {
 
-    private final Session delegate;
+    private final EntityManager delegate;
 
-    public HibernateSessionHandler(final Session delegate) {
+    public HibernateEntityManagerHandler(final EntityManager delegate) {
         super(delegate);
         this.delegate = delegate;
     }
 
     @Override
-    void doWork(final Session session, Work work) throws HibernateException {
+    void doWork(final EntityManager entityManager, final Work work) throws HibernateException {
+        final Session session = getSession(entityManager);
         session.doWork(work);
+    }
+
+    private Session getSession(EntityManager entityManager) {
+        return entityManager.unwrap(Session.class);
     }
 
 
@@ -34,15 +40,7 @@ public class HibernateSessionHandler extends AbstractHibernateSessionHandler<Ses
             case "unwrap":
                 final Class<?> iface2 = (Class<?>) args[0];
                 return (iface2.isInstance(proxy) ? proxy : null);
-            case "connection":
-                return method.invoke(delegate, args);
             case "close":
-                unlinkHibernate();
-                return method.invoke(delegate, args);
-            case "disconnect":
-                unlinkHibernate();
-                return method.invoke(delegate, args);
-            case "reconnect":
                 unlinkHibernate();
                 return method.invoke(delegate, args);
             default:
@@ -58,7 +56,9 @@ public class HibernateSessionHandler extends AbstractHibernateSessionHandler<Ses
                 final HibernateConnection hibernateConnection = connection.unwrap(HibernateConnection.class);
                 this.connectionReference = new WeakReference<>(hibernateConnection);
                 this.hibernateReference = new WeakReference<>(delegate);
-                hibernateConnection.linkSession(this.hibernateReference, connectionReference);
+                final Reference<Session> sessionReference = new WeakReference<>(getSession(this.delegate));
+                hibernateConnection.linkEntityManager(this.hibernateReference, connectionReference);
+                hibernateConnection.linkSession(sessionReference, connectionReference);
             } catch (SQLException ex) {
                 throw new HibernateException(ex.toString(), ex);
             }
