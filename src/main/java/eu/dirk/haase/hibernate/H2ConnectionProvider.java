@@ -1,10 +1,10 @@
 package eu.dirk.haase.hibernate;
 
-import eu.dirk.haase.hibernate.jdbc.HibernateConnection;
 import eu.dirk.haase.hibernate.jdbc.HibernateDataSource;
 import org.h2.jdbcx.JdbcDataSource;
 import org.hibernate.HibernateException;
 import org.hibernate.connection.ConnectionProvider;
+import org.springframework.jdbc.datasource.SmartDataSource;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -29,18 +29,24 @@ public class H2ConnectionProvider implements ConnectionProvider {
 
     @Override
     public Connection getConnection() throws SQLException {
-        final HibernateConnection connection = (HibernateConnection) dataSource.getConnection();
-        return connection;
+        return dataSource.getConnection();
     }
 
     @Override
     public void closeConnection(Connection connection) throws SQLException {
-        connection.close();
+        if (dataSource.isWrapperFor(SmartDataSource.class)) {
+            if (dataSource.unwrap(SmartDataSource.class).shouldClose(connection)) {
+                connection.close();
+            } else {
+                System.out.println("SmartDataSource denied closing the connection.");
+            }
+        } else {
+            connection.close();
+        }
     }
 
     @Override
     public void close() throws HibernateException {
-
     }
 
     @Override
