@@ -1,6 +1,6 @@
 package eu.dirk.haase.hibernate.jdbc;
 
-import org.hibernate.Session;
+import org.hibernate.classic.Session;
 
 import javax.persistence.EntityManager;
 import java.lang.ref.Reference;
@@ -343,10 +343,18 @@ public class HibernateConnection implements Connection {
         void flush() {
             final T hibernate = hibernateReference.get();
             if (hibernate instanceof Session) {
-                ((Session) hibernate).flush();
-            } else if (hibernate instanceof EntityManager) {
-                ((EntityManager) hibernate).flush();
+                ((Session)hibernate).flush();
             }
+            if (hibernate instanceof EntityManager) {
+                ((EntityManager)hibernate).flush();
+            }
+        }
+
+        @Override
+        public String toString() {
+            return "HibernateReference{" +
+                    "hibernateReference=" + hibernateReference.get() +
+                    '}';
         }
     }
 

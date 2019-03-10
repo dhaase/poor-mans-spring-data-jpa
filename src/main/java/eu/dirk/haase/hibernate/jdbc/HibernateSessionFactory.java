@@ -106,7 +106,7 @@ public class HibernateSessionFactory implements SessionFactory {
     @Override
     public Session getCurrentSession() throws HibernateException {
         final Session session = delegate.getCurrentSession();
-        return proxySession(session);
+        return HibernateSession.proxySession(session);
     }
 
     @Override
@@ -142,25 +142,25 @@ public class HibernateSessionFactory implements SessionFactory {
     @Override
     public Session openSession(Connection connection) {
         final Session session = delegate.openSession(connection);
-        return proxySession(session);
+        return HibernateSession.proxySession(session);
     }
 
     @Override
     public Session openSession(Interceptor interceptor) throws HibernateException {
         final Session session = delegate.openSession(interceptor);
-        return proxySession(session);
+        return HibernateSession.proxySession(session);
     }
 
     @Override
     public Session openSession(Connection connection, Interceptor interceptor) {
         final Session session = delegate.openSession(connection, interceptor);
-        return proxySession(session);
+        return HibernateSession.proxySession(session);
     }
 
     @Override
     public Session openSession() throws HibernateException {
         final Session session = delegate.openSession();
-        return proxySession(session);
+        return HibernateSession.proxySession(session);
     }
 
     @Override
@@ -173,13 +173,5 @@ public class HibernateSessionFactory implements SessionFactory {
         return delegate.openStatelessSession(connection);
     }
 
-    private Session proxySession(Session session) {
-        if ((session instanceof Wrapper) && ((Wrapper) session).isWrapperFor(HibernateSession.class)) {
-            return session;
-        } else {
-            final Class<?>[] interfaces = {Session.class, HibernateSession.class};
-            final ClassLoader loader = this.getClass().getClassLoader();
-            return (Session) Proxy.newProxyInstance(loader, interfaces, new HibernateSessionHandler(session));
-        }
-    }
+
 }

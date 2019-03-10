@@ -19,15 +19,6 @@ public class HibernateEntityManagerFactory implements EntityManagerFactory {
         this.delegate = delegate;
     }
 
-    private EntityManager proxyEntityManager(EntityManager session) {
-        if ((session instanceof Wrapper) && ((Wrapper) session).isWrapperFor(HibernateEntityManager.class)) {
-            return session;
-        } else {
-            final Class<?>[] interfaces = {Session.class, HibernateEntityManager.class};
-            final ClassLoader loader = this.getClass().getClassLoader();
-            return (EntityManager) Proxy.newProxyInstance(loader, interfaces, new HibernateEntityManagerHandler(session));
-        }
-    }
 
     @Override
     public void close() {
@@ -36,12 +27,12 @@ public class HibernateEntityManagerFactory implements EntityManagerFactory {
 
     @Override
     public EntityManager createEntityManager(Map map) {
-        return proxyEntityManager(delegate.createEntityManager(map));
+        return HibernateEntityManager.proxyEntityManager(delegate.createEntityManager(map));
     }
 
     @Override
     public EntityManager createEntityManager() {
-        return proxyEntityManager(delegate.createEntityManager());
+        return HibernateEntityManager.proxyEntityManager(delegate.createEntityManager());
     }
 
     @Override

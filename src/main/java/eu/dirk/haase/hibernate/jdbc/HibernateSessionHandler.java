@@ -1,7 +1,7 @@
 package eu.dirk.haase.hibernate.jdbc;
 
 import org.hibernate.HibernateException;
-import org.hibernate.Session;
+import org.hibernate.classic.Session;
 import org.hibernate.jdbc.Work;
 
 import java.lang.ref.WeakReference;
@@ -33,7 +33,11 @@ public class HibernateSessionHandler extends AbstractHibernateSessionHandler<Ses
                 return iface1.isInstance(proxy);
             case "unwrap":
                 final Class<?> iface2 = (Class<?>) args[0];
-                return (iface2.isInstance(proxy) ? proxy : null);
+                if (iface2.isInstance(proxy)) {
+                    return proxy;
+                } else {
+                    return (iface2.isInstance(delegate) ? delegate : null);
+                }
             case "connection":
                 return method.invoke(delegate, args);
             case "close":

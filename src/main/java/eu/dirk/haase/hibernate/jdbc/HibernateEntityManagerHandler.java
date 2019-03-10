@@ -1,11 +1,10 @@
 package eu.dirk.haase.hibernate.jdbc;
 
 import org.hibernate.HibernateException;
-import org.hibernate.Session;
+import org.hibernate.classic.Session;
 import org.hibernate.jdbc.Work;
 
 import javax.persistence.EntityManager;
-import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.sql.Connection;
@@ -22,12 +21,8 @@ public class HibernateEntityManagerHandler extends AbstractHibernateSessionHandl
 
     @Override
     void doWork(final EntityManager entityManager, final Work work) throws HibernateException {
-        final Session session = getSession(entityManager);
+        final Session session = entityManager.unwrap(Session.class);
         session.doWork(work);
-    }
-
-    private Session getSession(EntityManager entityManager) {
-        return entityManager.unwrap(Session.class);
     }
 
 
@@ -39,7 +34,14 @@ public class HibernateEntityManagerHandler extends AbstractHibernateSessionHandl
                 return iface1.isInstance(proxy);
             case "unwrap":
                 final Class<?> iface2 = (Class<?>) args[0];
-                return (iface2.isInstance(proxy) ? proxy : null);
+                if (iface2.isInstance(proxy)) {
+                    return proxy;
+                } else {
+                    final Object innerObject = method.invoke(delegate, args);
+                    return (innerObject instanceof Session
+                            ? HibernateSession.proxySession((Session) innerObject)
+                            : innerObject);
+                }
             case "close":
                 unlinkHibernate();
                 return method.invoke(delegate, args);
@@ -56,9 +58,7 @@ public class HibernateEntityManagerHandler extends AbstractHibernateSessionHandl
                 final HibernateConnection hibernateConnection = connection.unwrap(HibernateConnection.class);
                 this.connectionReference = new WeakReference<>(hibernateConnection);
                 this.hibernateReference = new WeakReference<>(delegate);
-                final Reference<Session> sessionReference = new WeakReference<>(getSession(this.delegate));
                 hibernateConnection.linkEntityManager(this.hibernateReference, connectionReference);
-                hibernateConnection.linkSession(sessionReference, connectionReference);
             } catch (SQLException ex) {
                 throw new HibernateException(ex.toString(), ex);
             }
