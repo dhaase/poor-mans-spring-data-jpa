@@ -25,7 +25,9 @@ abstract class AbstractHibernateSessionHandler<T> implements InvocationHandler {
         try {
             isHibernateConnection = connection.isWrapperFor(HibernateConnection.class);
         } catch (SQLException ex) {
-            throw new HibernateException(ex.toString(), ex);
+            // Manche Treiber loesen eine Exception aus
+            // dabei ist die Frage doch leicht zu beantworten:
+            isHibernateConnection = false;
         }
     }
 

@@ -6,6 +6,7 @@ import javax.persistence.EntityManager;
 import java.lang.ref.Reference;
 import java.sql.*;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
@@ -17,7 +18,6 @@ public class HibernateConnection implements Connection {
 
     public HibernateConnection(final Connection delegate) {
         this.delegate = delegate;
-        System.out.println("----------- Connection -------------");
     }
 
     @Override
@@ -33,7 +33,6 @@ public class HibernateConnection implements Connection {
 
     @Override
     public void close() throws SQLException {
-        System.out.println("connection.close: " + (sessionReference == null ? null : sessionReference.sessionReference.get()) + ": " + this);
         unlink();
         delegate.close();
     }
@@ -88,7 +87,7 @@ public class HibernateConnection implements Connection {
         return delegate.createStruct(typeName, attributes);
     }
 
-    private void flush() {
+    public void flush() {
         if (this.sessionReference != null) {
             this.sessionReference.flush();
         }
@@ -310,10 +309,10 @@ public class HibernateConnection implements Connection {
 
     private void unlink() {
         if (this.sessionReference != null) {
-            this.sessionReference.clear();
+            this.sessionReference.unlink();
         }
         if (this.entityManagerReference != null) {
-            this.entityManagerReference.clear();
+            this.entityManagerReference.unlink();
         }
     }
 
@@ -327,26 +326,28 @@ public class HibernateConnection implements Connection {
 
     static class HibernateReference<T> {
         final Reference<Connection> connectionReference;
-        final Reference<T> sessionReference;
-        HibernateReference(final Reference<T> sessionReference, final Reference<Connection> connectionReference) {
-            this.sessionReference = sessionReference;
+        final Reference<T> hibernateReference;
+
+        HibernateReference(final Reference<T> hibernateReference, final Reference<Connection> connectionReference) {
+            Objects.nonNull(hibernateReference);
+            Objects.nonNull(connectionReference);
+            this.hibernateReference = hibernateReference;
             this.connectionReference = connectionReference;
         }
 
-        public void clear() {
+        void unlink() {
             connectionReference.clear();
-            sessionReference.clear();
+            hibernateReference.clear();
         }
 
-        public void flush() {
-            final T session = (sessionReference != null ? sessionReference.get() : null);
-            if (session instanceof Session) {
-                ((Session)session).flush();
-            }
-            if (session instanceof EntityManager) {
-                ((EntityManager)session).flush();
+        void flush() {
+            final T hibernate = hibernateReference.get();
+            if (hibernate instanceof Session) {
+                ((Session) hibernate).flush();
+            } else if (hibernate instanceof EntityManager) {
+                ((EntityManager) hibernate).flush();
             }
         }
-        }
+    }
 
 }
