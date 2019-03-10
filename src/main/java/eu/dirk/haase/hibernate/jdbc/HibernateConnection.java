@@ -344,8 +344,7 @@ public class HibernateConnection implements Connection {
             final T hibernate = hibernateReference.get();
             if (hibernate instanceof Session) {
                 ((Session)hibernate).flush();
-            }
-            if (hibernate instanceof EntityManager) {
+            } else if (hibernate instanceof EntityManager) {
                 ((EntityManager)hibernate).flush();
             }
         }
