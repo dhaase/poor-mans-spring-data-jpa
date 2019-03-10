@@ -1,5 +1,7 @@
 package eu.dirk.haase.hibernate.jdbc;
 
+import org.springframework.jdbc.datasource.SmartDataSource;
+
 import javax.sql.DataSource;
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -7,7 +9,7 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.logging.Logger;
 
-public class HibernateDataSource implements DataSource {
+public class HibernateDataSource implements DataSource, SmartDataSource {
 
     private final DataSource delegate;
 
@@ -52,11 +54,22 @@ public class HibernateDataSource implements DataSource {
 
     @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException {
+        if (iface.isInstance(this)) {
+            return true;
+        }
         return delegate.isWrapperFor(iface);
     }
 
     @Override
+    public boolean shouldClose(Connection connection) {
+        return false;
+    }
+
+    @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
+        if (iface.isInstance(this)) {
+            return (T) this;
+        }
         return delegate.unwrap(iface);
     }
 

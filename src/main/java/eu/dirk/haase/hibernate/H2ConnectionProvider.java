@@ -19,7 +19,7 @@ public class H2ConnectionProvider implements ConnectionProvider {
     }
 
     @Override
-    public void configure(Properties properties) throws HibernateException {
+    public void configure(final Properties properties) throws HibernateException {
         final JdbcDataSource ds = new JdbcDataSource();
         ds.setUrl("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1");
         ds.setUser("sa");
@@ -33,7 +33,7 @@ public class H2ConnectionProvider implements ConnectionProvider {
     }
 
     @Override
-    public void closeConnection(Connection connection) throws SQLException {
+    public void closeConnection(final Connection connection) throws SQLException {
         if (dataSource.isWrapperFor(SmartDataSource.class)) {
             if (dataSource.unwrap(SmartDataSource.class).shouldClose(connection)) {
                 connection.close();
