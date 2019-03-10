@@ -5,18 +5,15 @@ import org.hibernate.classic.Session;
 import org.hibernate.jdbc.Work;
 
 import java.lang.ref.WeakReference;
-import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.SQLException;
 
 public class HibernateSessionHandler extends AbstractHibernateSessionHandler<Session> {
 
-    private final Session delegate;
 
     public HibernateSessionHandler(final Session delegate) {
         super(delegate);
-        this.delegate = delegate;
     }
 
     @Override
@@ -57,7 +54,7 @@ public class HibernateSessionHandler extends AbstractHibernateSessionHandler<Ses
 
     @Override
     void linkHibernate(final Connection connection) {
-        if (isHibernateConnection()) {
+        if (isHibernateConnection) {
             try {
                 final HibernateConnection hibernateConnection = connection.unwrap(HibernateConnection.class);
                 this.connectionReference = new WeakReference<>(hibernateConnection);

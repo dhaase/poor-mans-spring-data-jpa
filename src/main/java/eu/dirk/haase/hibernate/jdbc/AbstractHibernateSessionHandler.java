@@ -10,10 +10,10 @@ import java.sql.SQLException;
 
 abstract class AbstractHibernateSessionHandler<T> implements InvocationHandler {
 
-    private final T delegate;
+    final T delegate;
     Reference<Connection> connectionReference;
     Reference<T> hibernateReference;
-    private boolean isHibernateConnection;
+    boolean isHibernateConnection;
 
     AbstractHibernateSessionHandler(final T delegate) {
         this.delegate = delegate;
@@ -39,10 +39,6 @@ abstract class AbstractHibernateSessionHandler<T> implements InvocationHandler {
                 doWork(this.delegate, (c) -> linkHibernate(c));
             }
         }
-    }
-
-    public boolean isHibernateConnection() {
-        return isHibernateConnection;
     }
 
     abstract void linkHibernate(final Connection connection);

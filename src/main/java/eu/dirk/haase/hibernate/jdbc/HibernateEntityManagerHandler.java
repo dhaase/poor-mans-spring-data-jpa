@@ -12,11 +12,9 @@ import java.sql.SQLException;
 
 public class HibernateEntityManagerHandler extends AbstractHibernateSessionHandler<EntityManager> {
 
-    private final EntityManager delegate;
 
     public HibernateEntityManagerHandler(final EntityManager delegate) {
         super(delegate);
-        this.delegate = delegate;
     }
 
     @Override
@@ -53,7 +51,7 @@ public class HibernateEntityManagerHandler extends AbstractHibernateSessionHandl
 
     @Override
     void linkHibernate(final Connection connection) {
-        if (isHibernateConnection()) {
+        if (isHibernateConnection) {
             try {
                 final HibernateConnection hibernateConnection = connection.unwrap(HibernateConnection.class);
                 this.connectionReference = new WeakReference<>(hibernateConnection);
