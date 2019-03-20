@@ -216,11 +216,19 @@ public class HibernateConnection implements Connection {
     }
 
     public void linkEntityManager(final Reference<EntityManager> entityManagerReference, final Reference<Connection> connectionReference) {
-        this.entityManagerReference = new HibernateReference<>(entityManagerReference, connectionReference);
+        if (this.entityManagerReference == null) {
+            this.entityManagerReference = new HibernateReference<>(entityManagerReference, connectionReference);
+        } else {
+            this.entityManagerReference = this.entityManagerReference.exchange(entityManagerReference, connectionReference);
+        }
     }
 
     public void linkSession(final Reference<Session> sessionReference, final Reference<Connection> connectionReference) {
-        this.sessionReference = new HibernateReference<>(sessionReference, connectionReference);
+        if (this.sessionReference == null) {
+            this.sessionReference = new HibernateReference<>(sessionReference, connectionReference);
+        } else {
+            this.sessionReference = this.sessionReference.exchange(sessionReference, connectionReference);
+        }
     }
 
     @Override
@@ -336,6 +344,15 @@ public class HibernateConnection implements Connection {
             this.connectionReference = connectionReference;
         }
 
+        HibernateReference<T> exchange(final Reference<T> hibernateReference, final Reference<Connection> connectionReference) {
+            if ((this.hibernateReference.get() == hibernateReference.get()) && (this.connectionReference.get() == connectionReference.get())) {
+                return this;
+            } else {
+                flush();
+                return new HibernateReference(hibernateReference, connectionReference);
+            }
+        }
+
         void unlink() {
             connectionReference.clear();
             hibernateReference.clear();
@@ -344,9 +361,9 @@ public class HibernateConnection implements Connection {
         void flush() {
             final T hibernate = hibernateReference.get();
             if (hibernate instanceof Session) {
-                ((Session)hibernate).flush();
+                ((Session) hibernate).flush();
             } else if (hibernate instanceof EntityManager) {
-                ((EntityManager)hibernate).flush();
+                ((EntityManager) hibernate).flush();
             }
         }
 
