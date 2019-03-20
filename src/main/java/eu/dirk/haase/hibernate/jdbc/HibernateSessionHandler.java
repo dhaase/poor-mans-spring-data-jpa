@@ -53,7 +53,7 @@ public class HibernateSessionHandler extends AbstractHibernateSessionHandler<Ses
 
     @Override
     void linkHibernate(final Connection connection) {
-        if (this.isHibernateConnection) {
+        if (this.isHibernateConnection && !this.isClosed) {
             try {
                 final IHibernateConnection hibernateConnection = connection.unwrap(IHibernateConnection.class);
                 this.connectionReference = new WeakReference<>(hibernateConnection);
