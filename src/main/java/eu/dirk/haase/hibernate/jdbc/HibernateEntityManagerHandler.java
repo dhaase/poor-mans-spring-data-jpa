@@ -35,27 +35,28 @@ public class HibernateEntityManagerHandler extends AbstractHibernateSessionHandl
                 if (iface2.isInstance(proxy)) {
                     return proxy;
                 } else {
-                    final Object innerObject = method.invoke(delegate, args);
+                    final Object innerObject = method.invoke(this.delegate, args);
                     return (innerObject instanceof Session
                             ? HibernateSession.proxySession((Session) innerObject)
                             : innerObject);
                 }
             case "close":
+                this.isClosed = true;
                 unlinkHibernate();
-                return method.invoke(delegate, args);
+                return method.invoke(this.delegate, args);
             default:
                 ensureLinkedHibernate();
-                return method.invoke(delegate, args);
+                return method.invoke(this.delegate, args);
         }
     }
 
     @Override
     void linkHibernate(final Connection connection) {
-        if (isHibernateConnection) {
+        if (this.isHibernateConnection) {
             try {
                 final IHibernateConnection hibernateConnection = connection.unwrap(IHibernateConnection.class);
                 this.connectionReference = new WeakReference<>(hibernateConnection);
-                this.hibernateReference = new WeakReference<>(delegate);
+                this.hibernateReference = new WeakReference<>(this.delegate);
                 hibernateConnection.linkEntityManager(this.hibernateReference, connectionReference);
             } catch (SQLException ex) {
                 throw new HibernateException(ex.toString(), ex);

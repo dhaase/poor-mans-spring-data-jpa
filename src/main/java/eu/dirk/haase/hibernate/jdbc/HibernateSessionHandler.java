@@ -33,31 +33,32 @@ public class HibernateSessionHandler extends AbstractHibernateSessionHandler<Ses
                 if (iface2.isInstance(proxy)) {
                     return proxy;
                 } else {
-                    return (iface2.isInstance(delegate) ? delegate : null);
+                    return (iface2.isInstance(this.delegate) ? this.delegate : null);
                 }
             case "close":
+                this.isClosed = true;
                 unlinkHibernate();
-                return method.invoke(delegate, args);
+                return method.invoke(this.delegate, args);
             case "disconnect":
                 unlinkHibernate();
-                return method.invoke(delegate, args);
+                return method.invoke(this.delegate, args);
             case "reconnect":
                 unlinkHibernate();
-                return method.invoke(delegate, args);
+                return method.invoke(this.delegate, args);
             default:
                 ensureLinkedHibernate();
-                return method.invoke(delegate, args);
+                return method.invoke(this.delegate, args);
         }
     }
 
     @Override
     void linkHibernate(final Connection connection) {
-        if (isHibernateConnection) {
+        if (this.isHibernateConnection) {
             try {
                 final IHibernateConnection hibernateConnection = connection.unwrap(IHibernateConnection.class);
                 this.connectionReference = new WeakReference<>(hibernateConnection);
-                this.hibernateReference = new WeakReference<>(delegate);
-                hibernateConnection.linkSession(this.hibernateReference, connectionReference);
+                this.hibernateReference = new WeakReference<>(this.delegate);
+                hibernateConnection.linkSession(this.hibernateReference, this.connectionReference);
             } catch (SQLException ex) {
                 throw new HibernateException(ex.toString(), ex);
             }

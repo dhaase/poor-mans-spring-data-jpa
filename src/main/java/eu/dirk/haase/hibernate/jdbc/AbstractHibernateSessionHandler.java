@@ -14,8 +14,10 @@ abstract class AbstractHibernateSessionHandler<T> implements InvocationHandler {
     Reference<IHibernateConnection> connectionReference;
     Reference<T> hibernateReference;
     boolean isHibernateConnection;
+    boolean isClosed;
 
     AbstractHibernateSessionHandler(final T delegate) {
+        this.isClosed = false;
         this.delegate = delegate;
         doWork(this.delegate, (c) -> determineHibernateConnection(c));
         ensureLinkedHibernate();
@@ -23,20 +25,20 @@ abstract class AbstractHibernateSessionHandler<T> implements InvocationHandler {
 
     private void determineHibernateConnection(final Connection connection) {
         try {
-            isHibernateConnection = connection.isWrapperFor(HibernateConnection.class);
+            this.isHibernateConnection = connection.isWrapperFor(HibernateConnection.class);
         } catch (SQLException ex) {
             // Manche Treiber loesen eine Exception aus
             // dabei ist die Frage doch leicht zu beantworten:
-            isHibernateConnection = false;
+            this.isHibernateConnection = false;
         }
     }
 
     abstract void doWork(final T delegate, final Work work) throws HibernateException;
 
     void ensureLinkedHibernate() {
-        if (isHibernateConnection) {
-            final boolean isConnectionAbsent = (connectionReference == null) || (connectionReference.get() == null);
-            final boolean isHibernateAbsent = (hibernateReference == null) || (hibernateReference.get() == null);
+        if (this.isHibernateConnection && !this.isClosed) {
+            final boolean isConnectionAbsent = (this.connectionReference == null) || (this.connectionReference.get() == null);
+            final boolean isHibernateAbsent = (this.hibernateReference == null) || (this.hibernateReference.get() == null);
             if (isConnectionAbsent || isHibernateAbsent) {
                 doWork(this.delegate, (c) -> linkHibernate(c));
             }
@@ -46,7 +48,7 @@ abstract class AbstractHibernateSessionHandler<T> implements InvocationHandler {
     abstract void linkHibernate(final Connection connection);
 
     void unlinkHibernate() {
-        if (isHibernateConnection) {
+        if (this.isHibernateConnection) {
             if (this.connectionReference != null) {
                 this.connectionReference.clear();
             }
