@@ -35,7 +35,9 @@ abstract class AbstractHibernateSessionHandler<T> implements InvocationHandler {
 
     void ensureLinkedHibernate() {
         if (isHibernateConnection) {
-            if ((connectionReference == null) || (connectionReference.get() == null)) {
+            final boolean isConnectionAbsent = (connectionReference == null) || (connectionReference.get() == null);
+            final boolean isHibernateAbsent = (hibernateReference == null) || (hibernateReference.get() == null);
+            if (isConnectionAbsent || isHibernateAbsent) {
                 doWork(this.delegate, (c) -> linkHibernate(c));
             }
         }

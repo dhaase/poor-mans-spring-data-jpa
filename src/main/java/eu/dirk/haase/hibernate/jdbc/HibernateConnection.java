@@ -218,16 +218,20 @@ public class HibernateConnection implements Connection {
     public void linkEntityManager(final Reference<EntityManager> entityManagerReference, final Reference<Connection> connectionReference) {
         if (this.entityManagerReference == null) {
             this.entityManagerReference = new HibernateReference<>(entityManagerReference, connectionReference);
+        } else if (connectionReference.get() == this) {
+            this.entityManagerReference = this.entityManagerReference.exchange(entityManagerReference);
         } else {
-            this.entityManagerReference = this.entityManagerReference.exchange(entityManagerReference, connectionReference);
+            throw new IllegalStateException("This connection is NOT associated with the connection of the Hibernate EntityManager.");
         }
     }
 
     public void linkSession(final Reference<Session> sessionReference, final Reference<Connection> connectionReference) {
         if (this.sessionReference == null) {
             this.sessionReference = new HibernateReference<>(sessionReference, connectionReference);
+        } else if (connectionReference.get() == this) {
+            this.sessionReference = this.sessionReference.exchange(sessionReference);
         } else {
-            this.sessionReference = this.sessionReference.exchange(sessionReference, connectionReference);
+            throw new IllegalStateException("This connection is NOT associated with the connection of the Hibernate Session.");
         }
     }
 
@@ -344,12 +348,13 @@ public class HibernateConnection implements Connection {
             this.connectionReference = connectionReference;
         }
 
-        HibernateReference<T> exchange(final Reference<T> hibernateReference, final Reference<Connection> connectionReference) {
-            if ((this.hibernateReference.get() == hibernateReference.get()) && (this.connectionReference.get() == connectionReference.get())) {
+        HibernateReference<T> exchange(final Reference<T> nextHibernateReference) {
+            if (this.hibernateReference.get() == nextHibernateReference.get()) {
                 return this;
             } else {
                 flush();
-                return new HibernateReference(hibernateReference, connectionReference);
+                hibernateReference.clear();
+                return new HibernateReference(nextHibernateReference, connectionReference);
             }
         }
 

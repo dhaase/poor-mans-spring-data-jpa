@@ -35,8 +35,6 @@ public class HibernateSessionHandler extends AbstractHibernateSessionHandler<Ses
                 } else {
                     return (iface2.isInstance(delegate) ? delegate : null);
                 }
-            case "connection":
-                return method.invoke(delegate, args);
             case "close":
                 unlinkHibernate();
                 return method.invoke(delegate, args);
