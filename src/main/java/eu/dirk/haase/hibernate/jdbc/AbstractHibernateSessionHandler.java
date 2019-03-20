@@ -11,7 +11,7 @@ import java.sql.SQLException;
 abstract class AbstractHibernateSessionHandler<T> implements InvocationHandler {
 
     final T delegate;
-    Reference<Connection> connectionReference;
+    Reference<IHibernateConnection> connectionReference;
     Reference<T> hibernateReference;
     boolean isHibernateConnection;
 

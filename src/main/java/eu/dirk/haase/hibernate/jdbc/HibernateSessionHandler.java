@@ -54,7 +54,7 @@ public class HibernateSessionHandler extends AbstractHibernateSessionHandler<Ses
     void linkHibernate(final Connection connection) {
         if (isHibernateConnection) {
             try {
-                final HibernateConnection hibernateConnection = connection.unwrap(HibernateConnection.class);
+                final IHibernateConnection hibernateConnection = connection.unwrap(IHibernateConnection.class);
                 this.connectionReference = new WeakReference<>(hibernateConnection);
                 this.hibernateReference = new WeakReference<>(delegate);
                 hibernateConnection.linkSession(this.hibernateReference, connectionReference);

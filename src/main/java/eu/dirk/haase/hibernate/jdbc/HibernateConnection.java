@@ -10,7 +10,7 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
-public class HibernateConnection implements Connection {
+public class HibernateConnection implements Connection, IHibernateConnection {
 
     private final Connection delegate;
     private HibernateReference<EntityManager> entityManagerReference;
@@ -88,6 +88,7 @@ public class HibernateConnection implements Connection {
         return delegate.createStruct(typeName, attributes);
     }
 
+    @Override
     public void flush() {
         if (this.sessionReference != null) {
             this.sessionReference.flush();
@@ -215,24 +216,40 @@ public class HibernateConnection implements Connection {
         return delegate.isWrapperFor(iface);
     }
 
-    public void linkEntityManager(final Reference<EntityManager> entityManagerReference, final Reference<Connection> connectionReference) {
+    @Override
+    public void linkEntityManager(final Reference<EntityManager> entityManagerReference, final Reference<IHibernateConnection> connectionReference) {
         if (this.entityManagerReference == null) {
             this.entityManagerReference = new HibernateReference<>(entityManagerReference, connectionReference);
         } else if (connectionReference.get() == this) {
-            this.entityManagerReference = this.entityManagerReference.exchange(entityManagerReference);
+            this.entityManagerReference = this.entityManagerReference.exchange(entityManagerReference, connectionReference);
         } else {
-            throw new IllegalStateException("This connection is NOT associated with the connection of the Hibernate EntityManager.");
+            // Diese Situation kann eigentlich nicht auftreten,
+            // aber unter dem Tisch fallen moechte ich nun auch nicht.
+            // Manchmal kann sich ja die urspruenglich gedachte Situation aendern:
+            throw new IllegalStateException("This connection is NOT identical with the connection of the Hibernate EntityManager.");
         }
     }
 
-    public void linkSession(final Reference<Session> sessionReference, final Reference<Connection> connectionReference) {
+    @Override
+    public void linkSession(final Reference<Session> sessionReference, final Reference<IHibernateConnection> connectionReference) {
         if (this.sessionReference == null) {
             this.sessionReference = new HibernateReference<>(sessionReference, connectionReference);
         } else if (connectionReference.get() == this) {
-            this.sessionReference = this.sessionReference.exchange(sessionReference);
+            this.sessionReference = this.sessionReference.exchange(sessionReference, connectionReference);
         } else {
-            throw new IllegalStateException("This connection is NOT associated with the connection of the Hibernate Session.");
+            // Diese Situation kann eigentlich nicht auftreten,
+            // aber unter dem Tisch fallen moechte ich nun auch nicht.
+            // Manchmal kann sich ja die urspruenglich gedachte Situation aendern:
+            throw new IllegalStateException("This connection is NOT identical with the connection of the Hibernate Session.");
         }
+    }
+
+    public boolean isSessionLinked() {
+        return (this.sessionReference != null ? this.sessionReference.isLinked() : false);
+    }
+
+    public boolean isEntityManagerLinked() {
+        return (this.entityManagerReference != null ? this.entityManagerReference.isLinked() : false);
     }
 
     @Override
@@ -338,24 +355,30 @@ public class HibernateConnection implements Connection {
     }
 
     static class HibernateReference<T> {
-        final Reference<Connection> connectionReference;
+        final Reference<IHibernateConnection> connectionReference;
         final Reference<T> hibernateReference;
 
-        HibernateReference(final Reference<T> hibernateReference, final Reference<Connection> connectionReference) {
+        HibernateReference(final Reference<T> hibernateReference, final Reference<IHibernateConnection> connectionReference) {
             Objects.nonNull(hibernateReference);
             Objects.nonNull(connectionReference);
             this.hibernateReference = hibernateReference;
             this.connectionReference = connectionReference;
         }
 
-        HibernateReference<T> exchange(final Reference<T> nextHibernateReference) {
-            if (this.hibernateReference.get() == nextHibernateReference.get()) {
+        HibernateReference<T> exchange(final Reference<T> nextHibernateReference, final Reference<IHibernateConnection> nextConnectionReference) {
+            final boolean isSameHibernate = this.hibernateReference.get() == nextHibernateReference.get();
+            final boolean isSameConnection = this.connectionReference.get() == nextConnectionReference.get();
+            if (isSameHibernate && isSameConnection) {
                 return this;
             } else {
                 flush();
-                hibernateReference.clear();
-                return new HibernateReference(nextHibernateReference, connectionReference);
+                unlink();
+                return new HibernateReference(nextHibernateReference, nextConnectionReference);
             }
+        }
+
+        boolean isLinked() {
+            return hibernateReference.get() != null;
         }
 
         void unlink() {
