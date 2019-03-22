@@ -4,23 +4,31 @@ import org.hibernate.HibernateException;
 import org.hibernate.classic.Session;
 import org.hibernate.jdbc.Work;
 
+import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Optional;
 
 public class HibernateSessionHandler extends AbstractHibernateSessionHandler<Session> {
 
+    private static final ThreadLocal<Reference<HibernateSessionLinker>> threadLocalSession = new ThreadLocal<>();
 
     public HibernateSessionHandler(final Session delegate) {
         super(delegate);
     }
 
+    public static Optional<HibernateSessionLinker> currentLinker() {
+        final Reference<HibernateSessionLinker> linker = threadLocalSession.get();
+        return Optional.ofNullable(linker != null ? linker.get() : null);
+    }
+
+
     @Override
     void doWork(final Session session, Work work) throws HibernateException {
         session.doWork(work);
     }
-
 
     @Override
     public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
@@ -37,22 +45,25 @@ public class HibernateSessionHandler extends AbstractHibernateSessionHandler<Ses
                 }
             case "close":
                 this.isClosed = true;
+                becomeObsoleteLinker();
                 unlinkHibernate();
                 return method.invoke(this.delegate, args);
             case "disconnect":
+                becomeObsoleteLinker();
                 unlinkHibernate();
                 return method.invoke(this.delegate, args);
             case "reconnect":
+                becomeObsoleteLinker();
                 unlinkHibernate();
                 return method.invoke(this.delegate, args);
             default:
-                ensureLinkedHibernate();
+                threadLocalSession.set(refreshLinker());
                 return method.invoke(this.delegate, args);
         }
     }
 
     @Override
-    void linkHibernate(final Connection connection) {
+    public void linkHibernate(final Connection connection) {
         if (this.isHibernateConnection && !this.isClosed) {
             try {
                 final IHibernateConnection hibernateConnection = connection.unwrap(IHibernateConnection.class);

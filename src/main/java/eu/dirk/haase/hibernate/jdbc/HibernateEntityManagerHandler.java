@@ -5,16 +5,24 @@ import org.hibernate.classic.Session;
 import org.hibernate.jdbc.Work;
 
 import javax.persistence.EntityManager;
+import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Optional;
 
 public class HibernateEntityManagerHandler extends AbstractHibernateSessionHandler<EntityManager> {
 
+    private static final ThreadLocal<Reference<HibernateSessionLinker>> threadLocalSession = new ThreadLocal<>();
 
     public HibernateEntityManagerHandler(final EntityManager delegate) {
         super(delegate);
+    }
+
+    public static Optional<HibernateSessionLinker> currentLinker() {
+        final Reference<HibernateSessionLinker> linker = threadLocalSession.get();
+        return Optional.ofNullable(linker != null ? linker.get() : null);
     }
 
     @Override
@@ -41,17 +49,18 @@ public class HibernateEntityManagerHandler extends AbstractHibernateSessionHandl
                             : innerObject);
                 }
             case "close":
+                becomeObsoleteLinker();
                 this.isClosed = true;
                 unlinkHibernate();
                 return method.invoke(this.delegate, args);
             default:
-                ensureLinkedHibernate();
+                threadLocalSession.set(refreshLinker());
                 return method.invoke(this.delegate, args);
         }
     }
 
     @Override
-    void linkHibernate(final Connection connection) {
+    public void linkHibernate(final Connection connection) {
         if (this.isHibernateConnection && !this.isClosed) {
             try {
                 final IHibernateConnection hibernateConnection = connection.unwrap(IHibernateConnection.class);

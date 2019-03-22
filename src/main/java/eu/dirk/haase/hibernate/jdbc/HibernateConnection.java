@@ -7,6 +7,7 @@ import java.lang.ref.Reference;
 import java.sql.*;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
@@ -70,22 +71,44 @@ public class HibernateConnection implements Connection, IHibernateConnection {
 
     @Override
     public Statement createStatement() throws SQLException {
+        ensureLinkedHibernate();
         return delegate.createStatement();
     }
 
     @Override
     public Statement createStatement(int resultSetType, int resultSetConcurrency) throws SQLException {
+        ensureLinkedHibernate();
         return delegate.createStatement(resultSetType, resultSetConcurrency);
     }
 
     @Override
     public Statement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+        ensureLinkedHibernate();
         return delegate.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
     }
 
     @Override
     public Struct createStruct(String typeName, Object[] attributes) throws SQLException {
         return delegate.createStruct(typeName, attributes);
+    }
+
+    private void ensureLinkedEntityManager() {
+        final Optional<HibernateSessionLinker> linker = HibernateEntityManagerHandler.currentLinker();
+        if (linker.isPresent()) {
+            linker.get().linkHibernate(this);
+        }
+    }
+
+    private void ensureLinkedHibernate() {
+        ensureLinkedSession();
+        ensureLinkedEntityManager();
+    }
+
+    private void ensureLinkedSession() {
+        final Optional<HibernateSessionLinker> linker = HibernateSessionHandler.currentLinker();
+        if (linker.isPresent()) {
+            linker.get().linkHibernate(this);
+        }
     }
 
     @Override
@@ -193,6 +216,10 @@ public class HibernateConnection implements Connection, IHibernateConnection {
         return delegate.isClosed();
     }
 
+    public boolean isEntityManagerLinked() {
+        return (this.entityManagerReference != null ? this.entityManagerReference.isLinked() : false);
+    }
+
     @Override
     public boolean isReadOnly() throws SQLException {
         return delegate.isReadOnly();
@@ -201,6 +228,10 @@ public class HibernateConnection implements Connection, IHibernateConnection {
     @Override
     public void setReadOnly(boolean readOnly) throws SQLException {
         delegate.setReadOnly(readOnly);
+    }
+
+    public boolean isSessionLinked() {
+        return (this.sessionReference != null ? this.sessionReference.isLinked() : false);
     }
 
     @Override
@@ -242,14 +273,7 @@ public class HibernateConnection implements Connection, IHibernateConnection {
             // Manchmal kann sich ja die urspruenglich gedachte Situation aendern:
             throw new IllegalStateException("This connection is NOT identical with the connection of the Hibernate Session.");
         }
-    }
-
-    public boolean isSessionLinked() {
-        return (this.sessionReference != null ? this.sessionReference.isLinked() : false);
-    }
-
-    public boolean isEntityManagerLinked() {
-        return (this.entityManagerReference != null ? this.entityManagerReference.isLinked() : false);
+        System.out.println(this.sessionReference);
     }
 
     @Override
@@ -259,46 +283,55 @@ public class HibernateConnection implements Connection, IHibernateConnection {
 
     @Override
     public CallableStatement prepareCall(String sql) throws SQLException {
+        ensureLinkedHibernate();
         return delegate.prepareCall(sql);
     }
 
     @Override
     public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
+        ensureLinkedHibernate();
         return delegate.prepareCall(sql, resultSetType, resultSetConcurrency);
     }
 
     @Override
     public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+        ensureLinkedHibernate();
         return delegate.prepareCall(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
     }
 
     @Override
     public PreparedStatement prepareStatement(String sql) throws SQLException {
+        ensureLinkedHibernate();
         return delegate.prepareStatement(sql);
     }
 
     @Override
     public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
+        ensureLinkedHibernate();
         return delegate.prepareStatement(sql, resultSetType, resultSetConcurrency);
     }
 
     @Override
     public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+        ensureLinkedHibernate();
         return delegate.prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
     }
 
     @Override
     public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys) throws SQLException {
+        ensureLinkedHibernate();
         return delegate.prepareStatement(sql, autoGeneratedKeys);
     }
 
     @Override
     public PreparedStatement prepareStatement(String sql, int[] columnIndexes) throws SQLException {
+        ensureLinkedHibernate();
         return delegate.prepareStatement(sql, columnIndexes);
     }
 
     @Override
     public PreparedStatement prepareStatement(String sql, String[] columnNames) throws SQLException {
+        ensureLinkedHibernate();
         return delegate.prepareStatement(sql, columnNames);
     }
 
@@ -377,15 +410,6 @@ public class HibernateConnection implements Connection, IHibernateConnection {
             }
         }
 
-        boolean isLinked() {
-            return hibernateReference.get() != null;
-        }
-
-        void unlink() {
-            connectionReference.clear();
-            hibernateReference.clear();
-        }
-
         void flush() {
             final T hibernate = hibernateReference.get();
             if (hibernate instanceof Session) {
@@ -395,11 +419,20 @@ public class HibernateConnection implements Connection, IHibernateConnection {
             }
         }
 
+        boolean isLinked() {
+            return hibernateReference.get() != null;
+        }
+
         @Override
         public String toString() {
             return "HibernateReference{" +
-                    "hibernateReference=" + hibernateReference.get() +
+                    "isLinked=" + isLinked() +
                     '}';
+        }
+
+        void unlink() {
+            connectionReference.clear();
+            hibernateReference.clear();
         }
     }
 
