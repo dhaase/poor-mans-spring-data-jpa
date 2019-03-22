@@ -23,7 +23,7 @@ abstract class AbstractHibernateSessionHandler<T> implements InvocationHandler, 
     AbstractHibernateSessionHandler(final T delegate) {
         this.isClosed = false;
         this.delegate = delegate;
-        this.linker = new WeakReference<>(this);
+        this.linker = refreshLinker();
         doWork(this.delegate, (c) -> determineHibernateConnection(c));
     }
 
