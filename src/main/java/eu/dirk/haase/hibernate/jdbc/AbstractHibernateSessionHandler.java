@@ -18,7 +18,7 @@ abstract class AbstractHibernateSessionHandler<T> implements InvocationHandler, 
     Reference<T> hibernateReference;
     boolean isClosed;
     boolean isHibernateConnection;
-    private Reference<HibernateSessionLinker> linker;
+    Reference<HibernateSessionLinker> linker;
 
     AbstractHibernateSessionHandler(final T delegate) {
         this.isClosed = false;
@@ -29,14 +29,25 @@ abstract class AbstractHibernateSessionHandler<T> implements InvocationHandler, 
 
     Reference<HibernateSessionLinker> refreshLinker() {
         if ((this.linker == null) || (this.linker.get() == null)) {
-            this.linker = new WeakReference<>(this);
+            return new WeakReference<>(this);
+        } else {
+            return this.linker;
         }
-        return this.linker;
     }
 
-    void becomeObsoleteLinker() {
-        if ((this.linker != null) && (this.linker.get() != null)) {
-            this.linker.clear();
+    void becomeCurrentLinker(final ThreadLocal<Reference<HibernateSessionLinker>> threadLocalSession) {
+        final Reference<HibernateSessionLinker> lastLinker = threadLocalSession.get();
+        if (lastLinker != this.linker) {
+            becomeObsoleteLinker(this.linker);
+            becomeObsoleteLinker(lastLinker);
+        }
+        this.linker = refreshLinker();
+        threadLocalSession.set(this.linker);
+    }
+
+    void becomeObsoleteLinker(final Reference<HibernateSessionLinker> lastLinker) {
+        if (lastLinker != null) {
+            lastLinker.clear();
         }
     }
 

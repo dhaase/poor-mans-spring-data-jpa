@@ -45,19 +45,19 @@ public class HibernateSessionHandler extends AbstractHibernateSessionHandler<Ses
                 }
             case "close":
                 this.isClosed = true;
-                becomeObsoleteLinker();
+                becomeObsoleteLinker(this.linker);
                 unlinkHibernate();
                 return method.invoke(this.delegate, args);
             case "disconnect":
-                becomeObsoleteLinker();
+                becomeObsoleteLinker(this.linker);
                 unlinkHibernate();
                 return method.invoke(this.delegate, args);
             case "reconnect":
-                becomeObsoleteLinker();
+                becomeObsoleteLinker(this.linker);
                 unlinkHibernate();
                 return method.invoke(this.delegate, args);
             default:
-                threadLocalSession.set(refreshLinker());
+                becomeCurrentLinker(threadLocalSession);
                 return method.invoke(this.delegate, args);
         }
     }

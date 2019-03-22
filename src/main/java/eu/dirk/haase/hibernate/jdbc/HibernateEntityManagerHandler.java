@@ -49,12 +49,12 @@ public class HibernateEntityManagerHandler extends AbstractHibernateSessionHandl
                             : innerObject);
                 }
             case "close":
-                becomeObsoleteLinker();
+                becomeObsoleteLinker(this.linker);
                 this.isClosed = true;
                 unlinkHibernate();
                 return method.invoke(this.delegate, args);
             default:
-                threadLocalSession.set(refreshLinker());
+                becomeCurrentLinker(threadLocalSession);
                 return method.invoke(this.delegate, args);
         }
     }
