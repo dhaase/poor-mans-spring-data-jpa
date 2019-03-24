@@ -1,8 +1,5 @@
 package eu.dirk.haase.hibernate.jdbc;
 
-import java.lang.ref.Reference;
-import java.lang.ref.SoftReference;
-import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -86,11 +83,6 @@ public final class ThreadLocalResourceHardRegistry<K, V1> implements ThreadLocal
     public Runnable releaseFunction(K key) {
         final Map<K, V1> localMap = getLocalMap();
         return () -> localMap.remove(key);
-    }
-
-
-    public enum RefType {
-        WEAK, SOFT;
     }
 
 }
