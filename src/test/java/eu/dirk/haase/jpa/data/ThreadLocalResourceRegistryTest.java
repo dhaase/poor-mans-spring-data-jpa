@@ -24,14 +24,14 @@ public abstract class ThreadLocalResourceRegistryTest {
         // When
         Future<?> future1 = executorService.submit(() -> {
             // Thread two
-            list1.add(registry.newIfAbsent(key1, (k) -> ++this.count));
+            list1.add(registry.computeIfAbsent(key1, (k) -> ++this.count));
             latch1.await();
             list1.add(registry.getCurrent(key1));
             return null;
         });
         Thread.sleep(100);
-        Integer value1a = registry.newIfAbsent(key1, (k) -> ++this.count + 23);
-        registry.clearAll();
+        Integer value1a = registry.computeIfAbsent(key1, (k) -> ++this.count + 23);
+        registry.releaseAll();
         latch1.countDown();
         future1.get();
         Integer value1b = registry.getCurrent(key1);
@@ -54,15 +54,15 @@ public abstract class ThreadLocalResourceRegistryTest {
         // When
         Future<?> future1 = executorService.submit(() -> {
             // Thread two
-            list1.add(registry.newIfAbsent(key1, (k) -> ++this.count));
+            list1.add(registry.computeIfAbsent(key1, (k) -> ++this.count));
             latch1.await();
             list1.add(registry.getCurrent(key1));
             return null;
         });
         Thread.sleep(100);
-        Integer value1a = registry.newIfAbsent(key1, (k) -> ++this.count);
+        Integer value1a = registry.computeIfAbsent(key1, (k) -> ++this.count);
         latch1.countDown();
-        registry.clearFunction(key1).run();
+        registry.releaseFunction(key1).run();
         Integer value1b = registry.getCurrent(key1);
         latch1.countDown();
         future1.get();
@@ -85,8 +85,8 @@ public abstract class ThreadLocalResourceRegistryTest {
         // When
         Future<?> future1 = executorService.submit(() -> {
             // Thread two
-            list1.add(registry.newIfAbsent(key1, (k) -> ++this.count));
-            list1.add(registry.clearFunction(key1));
+            list1.add(registry.computeIfAbsent(key1, (k) -> ++this.count));
+            list1.add(registry.releaseFunction(key1));
             latch1.await();
             list1.add(registry.getCurrent(key1));
             return null;
@@ -115,7 +115,7 @@ public abstract class ThreadLocalResourceRegistryTest {
         Future<List<Integer>> future1 = executorService.submit(() -> {
             // Thread two
             List<Integer> list = new ArrayList<>();
-            list.add(registry.newIfAbsent(key1, (k) -> ++this.count));
+            list.add(registry.computeIfAbsent(key1, (k) -> ++this.count));
             list.add(registry.getCurrent(key1));
             latch1.await();
             return list;
@@ -129,7 +129,7 @@ public abstract class ThreadLocalResourceRegistryTest {
         Future<List<Integer>> future2 = executorService.submit(() -> {
             // Thread three
             List<Integer> list = new ArrayList<>();
-            list.add(registry.newIfAbsent(key2, (k) -> ++this.count + 100));
+            list.add(registry.computeIfAbsent(key2, (k) -> ++this.count + 100));
             list.add(registry.getCurrent(key2));
             latch2.await();
             return list;
@@ -156,11 +156,11 @@ public abstract class ThreadLocalResourceRegistryTest {
         final String key1 = "key1";
         final String key2 = "key2";
         // When
-        int value1a = registry.newIfAbsent(key1, (k) -> ++this.count);
+        int value1a = registry.computeIfAbsent(key1, (k) -> ++this.count);
         int value2a = registry.getCurrent(key1);
         int value3a = registry.getCurrent(key1);
         //
-        int value1b = registry.newIfAbsent(key2, (k) -> ++this.count + 100);
+        int value1b = registry.computeIfAbsent(key2, (k) -> ++this.count + 100);
         int value2b = registry.getCurrent(key2);
         int value3b = registry.getCurrent(key2);
         // Then
@@ -177,7 +177,7 @@ public abstract class ThreadLocalResourceRegistryTest {
         // Given
         final String key1 = "key1";
         final String key2 = "key2";
-        int value1a = registry.newIfAbsent(key1, (k) -> ++this.count);
+        int value1a = registry.computeIfAbsent(key1, (k) -> ++this.count);
         // When
         boolean isExiting1b = registry.isCurrentExisting(key1);
         boolean isExiting2b = registry.isCurrentExisting(key2);
@@ -193,13 +193,13 @@ public abstract class ThreadLocalResourceRegistryTest {
         final String key1 = "key1";
         final String key2 = "key2";
         // When
-        int value1a = registry.newIfAbsent(key1, (k) -> ++this.count);
-        int value2a = registry.newIfAbsent(key1, (k) -> ++this.count);
-        int value3a = registry.newIfAbsent(key1, (k) -> ++this.count);
+        int value1a = registry.computeIfAbsent(key1, (k) -> ++this.count);
+        int value2a = registry.computeIfAbsent(key1, (k) -> ++this.count);
+        int value3a = registry.computeIfAbsent(key1, (k) -> ++this.count);
         //
-        int value1b = registry.newIfAbsent(key2, (k) -> ++this.count + 100);
-        int value2b = registry.newIfAbsent(key2, (k) -> ++this.count + 100);
-        int value3b = registry.newIfAbsent(key2, (k) -> ++this.count + 100);
+        int value1b = registry.computeIfAbsent(key2, (k) -> ++this.count + 100);
+        int value2b = registry.computeIfAbsent(key2, (k) -> ++this.count + 100);
+        int value3b = registry.computeIfAbsent(key2, (k) -> ++this.count + 100);
         // Then
         assertThat(value1a).isEqualTo(1);
         assertThat(value2a).isEqualTo(1);
@@ -215,10 +215,10 @@ public abstract class ThreadLocalResourceRegistryTest {
         // Given
         final String key1 = "key1";
         final String key2 = "key2";
-        Integer value1a = registry.newIfAbsent(key1, (k) -> ++this.count + 100);
-        Integer value2a = registry.newIfAbsent(key2, (k) -> ++this.count + 10);
+        Integer value1a = registry.computeIfAbsent(key1, (k) -> ++this.count + 100);
+        Integer value2a = registry.computeIfAbsent(key2, (k) -> ++this.count + 10);
         // When
-        Integer value1b1 = registry.removeCurrent(key1);
+        Integer value1b1 = registry.releaseCurrent(key1);
         Integer value1b2 = registry.getCurrent(key1);
         Integer value2b = registry.getCurrent(key2);
         // Then
@@ -234,9 +234,9 @@ public abstract class ThreadLocalResourceRegistryTest {
         // Given
         final String key1 = "key1";
         final String key2 = "key2";
-        Integer value1a = registry.newIfAbsent(key1, (k) -> ++this.count + 100);
-        Integer value2a = registry.newIfAbsent(key2, (k) -> ++this.count + 10);
-        Runnable clearFunction1 = registry.clearFunction(key1);
+        Integer value1a = registry.computeIfAbsent(key1, (k) -> ++this.count + 100);
+        Integer value2a = registry.computeIfAbsent(key2, (k) -> ++this.count + 10);
+        Runnable clearFunction1 = registry.releaseFunction(key1);
         // When
         clearFunction1.run();
         Integer value1b = registry.getCurrent(key1);
@@ -253,10 +253,10 @@ public abstract class ThreadLocalResourceRegistryTest {
         // Given
         final String key1 = "key1";
         final String key2 = "key2";
-        Integer value1a = registry.newIfAbsent(key1, (k) -> ++this.count + 100);
-        Integer value2a = registry.newIfAbsent(key2, (k) -> ++this.count + 10);
+        Integer value1a = registry.computeIfAbsent(key1, (k) -> ++this.count + 100);
+        Integer value2a = registry.computeIfAbsent(key2, (k) -> ++this.count + 10);
         // When
-        registry.clearCurrent();
+        registry.releaseCurrent();
         Integer value1b = registry.getCurrent(key1);
         Integer value2b = registry.getCurrent(key2);
         // Then
@@ -271,11 +271,11 @@ public abstract class ThreadLocalResourceRegistryTest {
         // Given
         final String key1 = "key1";
         final String key2 = "key2";
-        Integer value1a = registry.newIfAbsent(key1, (k) -> ++this.count + 100);
-        Integer value2a = registry.newIfAbsent(key2, (k) -> ++this.count + 10);
+        Integer value1a = registry.computeIfAbsent(key1, (k) -> ++this.count + 100);
+        Integer value2a = registry.computeIfAbsent(key2, (k) -> ++this.count + 10);
         ExecutorService executorService = Executors.newCachedThreadPool();
         // When
-        Future<?> future = executorService.submit(() -> registry.clearCurrent());
+        Future<?> future = executorService.submit(() -> registry.releaseCurrent());
         future.get();
         Integer value1b = registry.getCurrent(key1);
         Integer value2b = registry.getCurrent(key2);
