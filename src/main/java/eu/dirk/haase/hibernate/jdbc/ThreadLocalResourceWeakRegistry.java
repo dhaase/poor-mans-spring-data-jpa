@@ -10,6 +10,17 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 
+/**
+ * Registry um Ressourcen f&uuml;r den jeweils aktuellen Thread zu speichern
+ * und auszugeben.
+ * <p>
+ * Die Ressourcen werden, im Gegensatz zu {@link ThreadLocalResourceHardRegistry}
+ * entweder als Weak- oder als Softreferenz gespeichert (siehe {@link WeakReference}
+ * und {@link SoftReference}).
+ *
+ * @param <K>  der generische Typ der Keys.
+ * @param <V1> der generische Typ dieser Ressource.
+ */
 public final class ThreadLocalResourceWeakRegistry<K, V1> implements ThreadLocalResourceRegistry<K, V1> {
 
     private final RefType refType;
@@ -93,9 +104,5 @@ public final class ThreadLocalResourceWeakRegistry<K, V1> implements ThreadLocal
         return () -> localMap.remove(key);
     }
 
-
-    public enum RefType {
-        WEAK, SOFT;
-    }
 
 }

@@ -10,6 +10,16 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 
+/**
+ * Registry um Ressourcen f&uuml;r den jeweils aktuellen Thread zu speichern
+ * und auszugeben.
+ * <p>
+ * Die Ressourcen werden, im Gegensatz zu {@link ThreadLocalResourceWeakRegistry}
+ * normal als Hardreferenz gespeichert.
+ *
+ * @param <K>  der generische Typ der Keys.
+ * @param <V1> der generische Typ dieser Ressource.
+ */
 public final class ThreadLocalResourceHardRegistry<K, V1> implements ThreadLocalResourceRegistry<K, V1> {
 
     private final AtomicReference<ThreadLocal<Map<K, V1>>> threadLocalRef;
