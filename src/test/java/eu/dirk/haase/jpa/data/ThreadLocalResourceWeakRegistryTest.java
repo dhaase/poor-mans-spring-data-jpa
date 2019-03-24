@@ -1,6 +1,6 @@
 package eu.dirk.haase.jpa.data;
 
-import eu.dirk.haase.hibernate.jdbc.ThreadLocalResourceWeakRegistry;
+import eu.dirk.haase.hibernate.jdbc.ThreadLocalResourceRegistry;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.junit.runners.BlockJUnit4ClassRunner;
@@ -10,7 +10,7 @@ public class ThreadLocalResourceWeakRegistryTest extends ThreadLocalResourceRegi
 
     @Before
     public void setUp() {
-        this.registry = new ThreadLocalResourceWeakRegistry();
+        this.registry = ThreadLocalResourceRegistry.newInstance();
         this.count = 0;
     }
 

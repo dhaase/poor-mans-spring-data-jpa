@@ -1,6 +1,7 @@
 package eu.dirk.haase.jpa.data;
 
 import eu.dirk.haase.hibernate.jdbc.ThreadLocalResourceHardRegistry;
+import eu.dirk.haase.hibernate.jdbc.ThreadLocalResourceRegistry;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.junit.runners.BlockJUnit4ClassRunner;
@@ -10,7 +11,7 @@ public class ThreadLocalResourceHardRegistryTest extends ThreadLocalResourceRegi
 
     @Before
     public void setUp() {
-        this.registry = new ThreadLocalResourceHardRegistry();
+        this.registry = ThreadLocalResourceRegistry.newInstance(ThreadLocalResourceRegistry.RefType.HARD);
         this.count = 0;
     }
 
