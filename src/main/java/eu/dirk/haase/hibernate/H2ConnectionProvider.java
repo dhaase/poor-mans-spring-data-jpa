@@ -34,15 +34,16 @@ public class H2ConnectionProvider implements ConnectionProvider {
 
     @Override
     public void closeConnection(final Connection connection) throws SQLException {
-        if (dataSource.isWrapperFor(SmartDataSource.class)) {
-            if (dataSource.unwrap(SmartDataSource.class).shouldClose(connection)) {
-                connection.close();
-            } else {
-                System.out.println("SmartDataSource denied closing the connection.");
-            }
-        } else {
-            connection.close();
-        }
+        connection.close();
+//        if (dataSource.isWrapperFor(SmartDataSource.class)) {
+//            if (dataSource.unwrap(SmartDataSource.class).shouldClose(connection)) {
+//                connection.close();
+//            } else {
+//                System.out.println("SmartDataSource denied closing the connection.");
+//            }
+//        } else {
+//            connection.close();
+//        }
     }
 
     @Override
