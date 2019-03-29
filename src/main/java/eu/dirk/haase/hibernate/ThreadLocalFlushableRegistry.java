@@ -67,8 +67,9 @@ public class ThreadLocalFlushableRegistry implements FlushableRegistry {
             this.flushable2IndexMap = new HashMap<>();
         }
 
-        void flush(final Integer key, final Flushable flushable) {
+        void flushAndRemove(final Integer index, final Flushable flushable) {
             flushable.flush();
+            removeInternal(index);
         }
 
         int flushAll() {
@@ -79,50 +80,47 @@ public class ThreadLocalFlushableRegistry implements FlushableRegistry {
 
         private int flushAllInternal() {
             final int countFlushed = this.index2FlushableMap.size();
-            this.index2FlushableMap.forEach((k, f) -> flush(k, f));
-            this.index2FlushableMap.clear();
-            this.flushable2IndexMap.clear();
+            final Map<Integer, Flushable> flushableMap = new HashMap<>(this.index2FlushableMap);
+            flushableMap.forEach((k, f) -> flushAndRemove(k, f));
             return countFlushed;
         }
 
-        private int flushUntilIndexIfDuplicate(final Flushable flushable) {
+        private int flushUntilKnownFlushable(final Flushable flushable) {
             final Integer untilIndex = this.flushable2IndexMap.get(flushable);
-            final Integer lastIndex = lastIndex();
-            if (isDuplicateFlushable(untilIndex, lastIndex)) {
+            final Integer lastIndex = lastIndexOverall();
+            if (isKnownButNotLastFlushable(untilIndex, lastIndex)) {
                 final Map<Integer, Flushable> headMap = new HashMap<>(this.index2FlushableMap.headMap(untilIndex));
                 headMap.put(untilIndex, this.index2FlushableMap.get(untilIndex));
-                headMap.forEach((k, f) -> flush(k, f));
-                for (final Integer prevIndex : headMap.keySet()) {
-                    removeInternal(prevIndex);
-                }
+                headMap.forEach((k, f) -> flushAndRemove(k, f));
                 return headMap.size();
             }
             return 0;
         }
 
-        private boolean isDuplicateFlushable(Integer untilIndex, Integer lastIndex) {
+        private boolean isKnownButNotLastFlushable(Integer untilIndex, Integer lastIndex) {
             return (untilIndex != null) && !untilIndex.equals(lastIndex);
         }
 
-        private boolean isLastAndNewFlushable(Flushable flushable, Integer untilIndex, Integer lastIndex) {
-            return (this.index2FlushableMap.get(untilIndex) != flushable) && untilIndex.equals(lastIndex);
+        private boolean isLastAndKnownButNotIdentical(Flushable flushable, Integer flushableIndex, Integer lastIndex) {
+            return (this.index2FlushableMap.get(flushableIndex) != flushable)
+                    && this.index2FlushableMap.get(flushableIndex).equals(flushable)
+                    && flushableIndex.equals(lastIndex);
         }
 
-        private boolean isNewFlushable(Integer untilIndex, Integer lastIndex) {
-            return (untilIndex == null) || !untilIndex.equals(lastIndex);
+        private boolean isUnknownFlushable(Integer flushableIndex) {
+            return (flushableIndex == null);
         }
 
-        private Integer lastIndex() {
+        private Integer lastIndexOverall() {
             return (this.index2FlushableMap.isEmpty() ? null : this.index2FlushableMap.lastKey());
         }
 
         int register(final Flushable flushable) {
-            int countFlushed = flushUntilIndexIfDuplicate(flushable);
-            final Integer untilIndex = this.flushable2IndexMap.get(flushable);
-            final Integer lastIndex = lastIndex();
-            if (isNewFlushable(untilIndex, lastIndex)) {
+            int countFlushed = flushUntilKnownFlushable(flushable);
+            final Integer flushableIndex = this.flushable2IndexMap.get(flushable);
+            if (isUnknownFlushable(flushableIndex)) {
                 registerInternal(flushable);
-            } else if (isLastAndNewFlushable(flushable, untilIndex, lastIndex)) {
+            } else if (isLastAndKnownButNotIdentical(flushable, flushableIndex, lastIndexOverall())) {
                 countFlushed = flushAllInternal();
                 registerInternal(flushable);
             }
