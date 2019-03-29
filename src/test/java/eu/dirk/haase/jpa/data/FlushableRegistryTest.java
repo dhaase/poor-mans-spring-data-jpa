@@ -3,6 +3,7 @@ package eu.dirk.haase.jpa.data;
 import eu.dirk.haase.hibernate.Flushable;
 import eu.dirk.haase.hibernate.FlushableRegistry;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.BlockJUnit4ClassRunner;
@@ -77,7 +78,8 @@ public class FlushableRegistryTest {
     }
 
     @Test
-    public void test_that_register_last_flushable_again_do_not_change_the_state() {
+    @Ignore("Unterstuetzung fuer Entity-Manager gekoppelte Persistence-Contexte ist abgeschaltet.")
+    public void test_that_registering_last_equal_but_not_identical_flushable_again_is_flushing() {
         // Given
         for (int i = 0; 10 > i; ++i) {
             registry.register(flushableList.get(i));
@@ -97,6 +99,30 @@ public class FlushableRegistryTest {
         for (int i = 0; 10 > i; ++i) {
             final MyFlushable actual = flushableList.get(i);
             assertThat(actual.createIndex).isEqualTo(actual.flushIndex);
+        }
+    }
+
+    @Test
+    public void test_that_registering_last_flushable_again_is_not_flushing() {
+        // Given
+        for (int i = 0; 10 > i; ++i) {
+            registry.register(flushableList.get(i));
+        }
+        // When
+        int size1 = registry.register(flushableList.get(9));
+        int size2 = registry.register(flushableList.get(9));
+        int size3 = registry.register(flushableList.get(9));
+        int size4 = registry.register(flushableList.get(9));
+        int size5 = registry.sizeCurrent();
+        // Then
+        assertThat(size1).isEqualTo(0);
+        assertThat(size2).isEqualTo(0);
+        assertThat(size3).isEqualTo(0);
+        assertThat(size4).isEqualTo(0);
+        assertThat(size5).isEqualTo(10);
+        for (int i = 0; 10 > i; ++i) {
+            final MyFlushable actual = flushableList.get(i);
+            assertThat(actual.flushIndex).isNull();
         }
     }
 

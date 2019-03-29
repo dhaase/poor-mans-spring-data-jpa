@@ -57,6 +57,7 @@ public class ThreadLocalFlushableRegistry implements FlushableRegistry {
 
     static class FlushableList implements ThreadLocalResourceRegistry.ReleaseFunctionAware {
 
+        final static boolean IS_PERSISTENCE_CONTEXT_EM_COUPLED = false;
         final Map<Flushable, Integer> flushable2IndexMap;
         final SortedMap<Integer, Flushable> index2FlushableMap;
         int index;
@@ -120,7 +121,8 @@ public class ThreadLocalFlushableRegistry implements FlushableRegistry {
             final Integer flushableIndex = this.flushable2IndexMap.get(flushable);
             if (isUnknownFlushable(flushableIndex)) {
                 registerInternal(flushable);
-            } else if (isLastAndKnownButNotIdentical(flushable, flushableIndex, lastIndexOverall())) {
+            } else if (IS_PERSISTENCE_CONTEXT_EM_COUPLED
+                    && isLastAndKnownButNotIdentical(flushable, flushableIndex, lastIndexOverall())) {
                 countFlushed = flushAllInternal();
                 registerInternal(flushable);
             }
