@@ -10,6 +10,7 @@ import org.junit.runners.BlockJUnit4ClassRunner;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -20,14 +21,16 @@ public class FlushableRegistryTest {
     private int flushIndex;
     private List<MyFlushable> flushableList;
     private FlushableRegistry registry;
+    private Function<Integer, MyFlushable> newInstance;
 
     @Before
     public void setUp() {
         flushIndex = 0;
         registry = FlushableRegistry.newInstance();
+        newInstance = (i)->new MyFlushableNoFun(i);
         flushableList = new ArrayList<>();
         for (int i = 0; 10 > i; ++i) {
-            flushableList.add(new MyFlushable(i));
+            flushableList.add(newInstance.apply(i));
         }
     }
 
@@ -47,7 +50,7 @@ public class FlushableRegistryTest {
         assertThat(size3).isEqualTo(0);
         for (int i = 0; 10 > i; ++i) {
             final MyFlushable actual = flushableList.get(i);
-            assertThat(actual.createIndex).isEqualTo(actual.flushIndex);
+            assertThat(actual.createIndex()).isEqualTo(actual.flushIndex());
         }
     }
 
@@ -59,21 +62,48 @@ public class FlushableRegistryTest {
             registry.register(flushableList.get(i));
         }
         int size1 = registry.sizeCurrent();
-        MyFlushable myFlushable = new MyFlushable(5);
+        MyFlushable myFlushable = newInstance.apply(5);
         int size2 = registry.register(myFlushable);
         int size3 = registry.sizeCurrent();
         // Then
         assertThat(size1).isEqualTo(10);
         assertThat(size2).isEqualTo(6);
         assertThat(size3).isEqualTo(5);
-        assertThat(myFlushable.flushIndex).isNull();
+        assertThat(myFlushable.flushIndex()).isNull();
         for (int i = 0; 6 > i; ++i) {
             final MyFlushable actual = flushableList.get(i);
-            assertThat(actual.createIndex).isEqualTo(actual.flushIndex);
+            assertThat(actual.createIndex()).isEqualTo(actual.flushIndex());
         }
         for (int i = 6; 10 > i; ++i) {
             final MyFlushable actual = flushableList.get(i);
-            assertThat(actual.flushIndex).isNull();
+            assertThat(actual.flushIndex()).isNull();
+        }
+    }
+
+    @Test
+    public void test_that_head_flushables_are_flushed_when_flush_the_fifth_flushable() {
+        // Given
+        final List<MyFlushable> flushableList = new ArrayList<>();
+        for (int i = 0; 10 > i; ++i) {
+            flushableList.add(new MyFlushableUntil(i));
+        }
+        // When
+        for (int i = 0; 10 > i; ++i) {
+            registry.register(flushableList.get(i));
+        }
+        int size1 = registry.sizeCurrent();
+        flushableList.get(4).flush();
+        int size2 = registry.sizeCurrent();
+        // Then
+        assertThat(size1).isEqualTo(10);
+        assertThat(size2).isEqualTo(5);
+        for (int i = 0; 5 > i; ++i) {
+            final MyFlushable actual = flushableList.get(i);
+            assertThat(actual.createIndex()).isEqualTo(actual.flushIndex());
+        }
+        for (int i = 6; 10 > i; ++i) {
+            final MyFlushable actual = flushableList.get(i);
+            assertThat(actual.flushIndex()).isNull();
         }
     }
 
@@ -86,8 +116,8 @@ public class FlushableRegistryTest {
         }
         // When
         int size1 = registry.register(flushableList.get(9));
-        int size2 = registry.register(new MyFlushable(9));
-        int size3 = registry.register(new MyFlushable(9));
+        int size2 = registry.register(newInstance.apply(9));
+        int size3 = registry.register(newInstance.apply(9));
         int size4 = registry.register(flushableList.get(9));
         int size5 = registry.sizeCurrent();
         // Then
@@ -98,7 +128,7 @@ public class FlushableRegistryTest {
         assertThat(size5).isEqualTo(1);
         for (int i = 0; 10 > i; ++i) {
             final MyFlushable actual = flushableList.get(i);
-            assertThat(actual.createIndex).isEqualTo(actual.flushIndex);
+            assertThat(actual.createIndex()).isEqualTo(actual.flushIndex());
         }
     }
 
@@ -122,17 +152,27 @@ public class FlushableRegistryTest {
         assertThat(size5).isEqualTo(10);
         for (int i = 0; 10 > i; ++i) {
             final MyFlushable actual = flushableList.get(i);
-            assertThat(actual.flushIndex).isNull();
+            assertThat(actual.flushIndex()).isNull();
         }
     }
 
-    class MyFlushable implements Flushable {
+    interface MyFlushable extends Flushable {
+        int createIndex();
+
+        Integer flushIndex();
+    }
+
+    class MyFlushableNoFun implements Flushable, MyFlushable {
 
         final int createIndex;
         Integer flushIndex;
 
-        MyFlushable(int index) {
+        MyFlushableNoFun(int index) {
             this.createIndex = index;
+        }
+
+        public int createIndex() {
+            return createIndex;
         }
 
         @Override
@@ -140,7 +180,7 @@ public class FlushableRegistryTest {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
 
-            MyFlushable that = (MyFlushable) o;
+            MyFlushableNoFun that = (MyFlushableNoFun) o;
 
             return createIndex == that.createIndex;
         }
@@ -150,9 +190,64 @@ public class FlushableRegistryTest {
             this.flushIndex = FlushableRegistryTest.this.flushIndex++;
         }
 
+        public Integer flushIndex() {
+            return flushIndex;
+        }
+
         @Override
         public int hashCode() {
             return createIndex;
+        }
+
+    }
+
+    class MyFlushableUntil implements Flushable, MyFlushable, FlushableRegistry.UntilNowFlushable {
+
+        final int createIndex;
+        Integer flushIndex;
+        Runnable flushUntilFunction;
+
+        MyFlushableUntil(int index) {
+            this.createIndex = index;
+        }
+
+        public int createIndex() {
+            return createIndex;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            MyFlushableUntil that = (MyFlushableUntil) o;
+
+            return createIndex == that.createIndex;
+        }
+
+        @Override
+        public void flush() {
+            if (!FlushableRegistry.UntilNowFlushable.flush(this.flushUntilFunction)) {
+                realFlush();
+            }
+        }
+
+        public Integer flushIndex() {
+            return flushIndex;
+        }
+
+        @Override
+        public int hashCode() {
+            return createIndex;
+        }
+
+        public void realFlush() {
+            this.flushIndex = FlushableRegistryTest.this.flushIndex++;
+        }
+
+        @Override
+        public void setUntilNowFlushableFunction(Runnable flushUntilFunction) {
+            this.flushUntilFunction = flushUntilFunction;
         }
     }
 

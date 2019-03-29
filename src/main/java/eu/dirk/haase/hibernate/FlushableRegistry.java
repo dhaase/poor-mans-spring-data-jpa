@@ -15,4 +15,23 @@ public interface FlushableRegistry {
     void releaseCurrent();
 
     int sizeCurrent();
+
+    interface UntilNowFlushable {
+
+        void realFlush();
+
+        void setUntilNowFlushableFunction(final Runnable untilNowFlushableFunction);
+
+        static boolean flush(final Runnable untilNowFlushableFunction) {
+            if (untilNowFlushableFunction != null) {
+                untilNowFlushableFunction.run();
+                return true;
+            }
+            return false;
+        }
+    }
+
+    interface FlushableRegistryAware {
+        void setFlushableRegistry(final FlushableRegistry flushableRegistry);
+    }
 }

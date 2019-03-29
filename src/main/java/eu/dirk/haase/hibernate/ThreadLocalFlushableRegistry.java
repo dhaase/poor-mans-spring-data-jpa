@@ -69,7 +69,11 @@ public class ThreadLocalFlushableRegistry implements FlushableRegistry {
         }
 
         void flushAndRemove(final Integer index, final Flushable flushable) {
-            flushable.flush();
+            if (flushable instanceof UntilNowFlushable) {
+                ((UntilNowFlushable)flushable).realFlush();
+            } else {
+                flushable.flush();
+            }
             removeInternal(index);
         }
 
@@ -90,12 +94,16 @@ public class ThreadLocalFlushableRegistry implements FlushableRegistry {
             final Integer untilIndex = this.flushable2IndexMap.get(flushable);
             final Integer lastIndex = lastIndexOverall();
             if (isKnownButNotLastFlushable(untilIndex, lastIndex)) {
-                final Map<Integer, Flushable> headMap = new HashMap<>(this.index2FlushableMap.headMap(untilIndex));
-                headMap.put(untilIndex, this.index2FlushableMap.get(untilIndex));
-                headMap.forEach((k, f) -> flushAndRemove(k, f));
-                return headMap.size();
+                return flushUntil(untilIndex);
             }
             return 0;
+        }
+
+        private int flushUntil(Integer untilIndex) {
+            final Map<Integer, Flushable> headMap = new HashMap<>(this.index2FlushableMap.headMap(untilIndex));
+            headMap.put(untilIndex, this.index2FlushableMap.get(untilIndex));
+            headMap.forEach((k, f) -> flushAndRemove(k, f));
+            return headMap.size();
         }
 
         private boolean isKnownButNotLastFlushable(Integer untilIndex, Integer lastIndex) {
@@ -133,6 +141,9 @@ public class ThreadLocalFlushableRegistry implements FlushableRegistry {
             final int currIndex = ++index;
             this.index2FlushableMap.put(currIndex, flushable);
             this.flushable2IndexMap.put(flushable, currIndex);
+            if (flushable instanceof UntilNowFlushable) {
+                ((UntilNowFlushable) flushable).setUntilNowFlushableFunction(() -> flushUntil(currIndex));
+            }
         }
 
         private void removeInternal(final Integer index) {

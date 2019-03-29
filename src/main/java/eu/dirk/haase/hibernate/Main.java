@@ -16,6 +16,8 @@ public class Main {
 
     public static void main(String[] args) throws SQLException {
 
+        GlobalFlushables.current().flushAll();
+
         SessionFactory sf = HibernateUtil.getSessionFactory();
         Session session1 = sf.openSession();
         session1.beginTransaction();
