@@ -20,14 +20,14 @@ public class FlushableRegistryTest {
 
     private int flushIndex;
     private List<MyFlushable> flushableList;
-    private FlushableRegistry registry;
     private Function<Integer, MyFlushable> newInstance;
+    private FlushableRegistry registry;
 
     @Before
     public void setUp() {
         flushIndex = 0;
         registry = FlushableRegistry.newInstance();
-        newInstance = (i)->new MyFlushableNoFun(i);
+        newInstance = (i) -> new MyFlushableUntil(i);
         flushableList = new ArrayList<>();
         for (int i = 0; 10 > i; ++i) {
             flushableList.add(newInstance.apply(i));
@@ -105,6 +105,33 @@ public class FlushableRegistryTest {
             final MyFlushable actual = flushableList.get(i);
             assertThat(actual.flushIndex()).isNull();
         }
+    }
+
+    @Test
+    public void test_that_not_registered_flushable_is_several_times_flushable() {
+        // Given
+        final MyFlushable myFlushable = new MyFlushableUntil(99);
+        // When
+        myFlushable.flush();
+        myFlushable.flush();
+        myFlushable.flush();
+        myFlushable.flush();
+        // Then
+        assertThat(myFlushable.flushIndex()).isEqualTo(3);
+    }
+
+    @Test
+    public void test_that_registered_flushable_is_several_times_flushable() {
+        // Given
+        final MyFlushable myFlushable = new MyFlushableUntil(99);
+        registry.register(myFlushable);
+        // When
+        myFlushable.flush();
+        myFlushable.flush();
+        myFlushable.flush();
+        myFlushable.flush();
+        // Then
+        assertThat(myFlushable.flushIndex()).isEqualTo(3);
     }
 
     @Test

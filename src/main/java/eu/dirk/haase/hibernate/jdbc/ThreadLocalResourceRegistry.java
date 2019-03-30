@@ -114,6 +114,12 @@ public interface ThreadLocalResourceRegistry<K1, V1> {
      */
     interface ReleaseFunctionAware {
         void setReleaseFunction(final Runnable releaseFunction);
+
+        static void release(final Runnable releaseFunction) {
+            if (releaseFunction != null) {
+                releaseFunction.run();
+            }
+        }
     }
 
     /**
