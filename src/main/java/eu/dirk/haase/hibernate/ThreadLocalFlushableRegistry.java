@@ -22,6 +22,12 @@ public class ThreadLocalFlushableRegistry implements FlushableRegistry {
     }
 
     @Override
+    public boolean isCurrentInFlushSequence() {
+        FlushableList flushableList = registry.getCurrent(ResourceType.FlushableList);
+        return (flushableList != null ? flushableList.isInFlushSequence : false);
+    }
+
+    @Override
     public int register(Flushable flushable) {
         FlushableList flushableList = registry.computeIfAbsent(ResourceType.FlushableList, (k) -> new FlushableList());
         return flushableList.register(flushable);
@@ -61,11 +67,34 @@ public class ThreadLocalFlushableRegistry implements FlushableRegistry {
         final Map<Flushable, Integer> flushable2IndexMap;
         final SortedMap<Integer, Flushable> index2FlushableMap;
         int index;
+        boolean isInFlushSequence;
         Runnable releaseFunction;
 
         FlushableList() {
+            this.isInFlushSequence = false;
             this.index2FlushableMap = new TreeMap<>();
             this.flushable2IndexMap = new HashMap<>();
+        }
+
+        private int flushAll() {
+            if (!isInFlushSequence) {
+                try {
+                    isInFlushSequence = true;
+                    final int countFlushed = this.index2FlushableMap.size();
+                    final Map<Integer, Flushable> flushableMap = new TreeMap<>(this.index2FlushableMap);
+                    flushableMap.forEach((k, f) -> flushAndRemove(k, f));
+                    return countFlushed;
+                } finally {
+                    isInFlushSequence = false;
+                }
+            }
+            return 0;
+        }
+
+        int flushAllAndRelease() {
+            final int countFlushed = flushAll();
+            ThreadLocalResourceRegistry.ReleaseFunctionAware.release(releaseFunction);
+            return countFlushed;
         }
 
         void flushAndRemove(final Integer index, final Flushable flushable) {
@@ -79,17 +108,20 @@ public class ThreadLocalFlushableRegistry implements FlushableRegistry {
             removeInternal(index);
         }
 
-        int flushAllAndRelease() {
-            final int countFlushed = flushAll();
-            ThreadLocalResourceRegistry.ReleaseFunctionAware.release(releaseFunction);
-            return countFlushed;
-        }
-
-        private int flushAll() {
-            final int countFlushed = this.index2FlushableMap.size();
-            final Map<Integer, Flushable> flushableMap = new TreeMap<>(this.index2FlushableMap);
-            flushableMap.forEach((k, f) -> flushAndRemove(k, f));
-            return countFlushed;
+        private int flushUntil(Integer untilIndex) {
+            if (!isInFlushSequence && this.index2FlushableMap.containsKey(untilIndex)) {
+                try {
+                    isInFlushSequence = true;
+                    final Map<Integer, Flushable> headMap = new TreeMap<>(this.index2FlushableMap.headMap(untilIndex));
+                    headMap.put(untilIndex, this.index2FlushableMap.get(untilIndex));
+                    headMap.forEach((k, f) -> flushAndRemove(k, f));
+                    return headMap.size();
+                } finally {
+                    isInFlushSequence = false;
+                }
+            } else {
+                return 0;
+            }
         }
 
         private int flushUntilKnownFlushable(final Flushable flushable) {
@@ -101,22 +133,12 @@ public class ThreadLocalFlushableRegistry implements FlushableRegistry {
             return 0;
         }
 
-        private int flushUntil(Integer untilIndex) {
-            if (this.index2FlushableMap.containsKey(untilIndex)) {
-                final Map<Integer, Flushable> headMap = new TreeMap<>(this.index2FlushableMap.headMap(untilIndex));
-                headMap.put(untilIndex, this.index2FlushableMap.get(untilIndex));
-                headMap.forEach((k, f) -> flushAndRemove(k, f));
-                return headMap.size();
-            } else {
-                return 0;
-            }
-        }
-
         private boolean isKnownButNotLastFlushable(Integer untilIndex, Integer lastIndex) {
             return (untilIndex != null) && !untilIndex.equals(lastIndex);
         }
 
-        private boolean isLastAndKnownButNotIdentical(Flushable flushable, Integer flushableIndex, Integer lastIndex) {
+        private boolean isLastAndKnownButNotIdentical(Flushable flushable, Integer flushableIndex, Integer
+                lastIndex) {
             return (this.index2FlushableMap.get(flushableIndex) != flushable)
                     && this.index2FlushableMap.get(flushableIndex).equals(flushable)
                     && flushableIndex.equals(lastIndex);

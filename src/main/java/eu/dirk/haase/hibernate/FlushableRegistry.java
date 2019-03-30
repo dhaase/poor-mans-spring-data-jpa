@@ -16,6 +16,8 @@ public interface FlushableRegistry {
 
     int sizeCurrent();
 
+    boolean isCurrentInFlushSequence();
+
     interface UntilNowFlushable {
 
         void realFlush();
