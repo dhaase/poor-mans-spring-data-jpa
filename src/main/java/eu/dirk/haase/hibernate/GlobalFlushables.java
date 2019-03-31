@@ -35,6 +35,12 @@ public interface GlobalFlushables {
          * @return
          */
         int flushAll();
+
+        /**
+         *
+         * @return
+         */
+        boolean isCurrentlyInFlushSequence();
     }
 
     /**
@@ -78,6 +84,11 @@ public interface GlobalFlushables {
         @Override
         public int flushAll() {
             return this.registry.flushAllCurrent();
+        }
+
+        @Override
+        public boolean isCurrentlyInFlushSequence() {
+            return this.registry.isCurrentlyInFlushSequence();
         }
 
         @Override
