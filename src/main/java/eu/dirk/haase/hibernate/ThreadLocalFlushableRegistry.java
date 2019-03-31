@@ -22,7 +22,7 @@ public class ThreadLocalFlushableRegistry implements FlushableRegistry {
     }
 
     @Override
-    public boolean isCurrentInFlushSequence() {
+    public boolean isCurrentlyInFlushSequence() {
         FlushableList flushableList = registry.getCurrent(ResourceType.FlushableList);
         return (flushableList != null ? flushableList.isInFlushSequence : false);
     }
@@ -98,17 +98,17 @@ public class ThreadLocalFlushableRegistry implements FlushableRegistry {
         }
 
         void flushAndRemove(final Integer index, final Flushable flushable) {
-            if (flushable instanceof UntilNowFlushable) {
-                final UntilNowFlushable untilNowFlushable = (UntilNowFlushable) flushable;
-                untilNowFlushable.setUntilNowFlushableFunction(() -> untilNowFlushable.realFlush());
-                untilNowFlushable.realFlush();
+            if (flushable instanceof SequenceFlushable) {
+                final SequenceFlushable sequenceFlushable = (SequenceFlushable) flushable;
+                sequenceFlushable.setSequenceFlushableFunction(() -> sequenceFlushable.realFlush());
+                sequenceFlushable.realFlush();
             } else {
                 flushable.flush();
             }
             removeInternal(index);
         }
 
-        private int flushUntil(Integer untilIndex) {
+        private int sequenceFlush(Integer untilIndex) {
             if (!isInFlushSequence && this.index2FlushableMap.containsKey(untilIndex)) {
                 try {
                     isInFlushSequence = true;
@@ -124,11 +124,11 @@ public class ThreadLocalFlushableRegistry implements FlushableRegistry {
             }
         }
 
-        private int flushUntilKnownFlushable(final Flushable flushable) {
+        private int sequenceFlushIfKnown(final Flushable flushable) {
             final Integer untilIndex = this.flushable2IndexMap.get(flushable);
             final Integer lastIndex = lastIndexOverall();
             if (isKnownButNotLastFlushable(untilIndex, lastIndex)) {
-                return flushUntil(untilIndex);
+                return sequenceFlush(untilIndex);
             }
             return 0;
         }
@@ -153,7 +153,7 @@ public class ThreadLocalFlushableRegistry implements FlushableRegistry {
         }
 
         int register(final Flushable flushable) {
-            int countFlushed = flushUntilKnownFlushable(flushable);
+            int countFlushed = sequenceFlushIfKnown(flushable);
             final Integer flushableIndex = this.flushable2IndexMap.get(flushable);
             if (isUnknownFlushable(flushableIndex)) {
                 registerInternal(flushable);
@@ -169,8 +169,8 @@ public class ThreadLocalFlushableRegistry implements FlushableRegistry {
             final int currIndex = ++index;
             this.index2FlushableMap.put(currIndex, flushable);
             this.flushable2IndexMap.put(flushable, currIndex);
-            if (flushable instanceof UntilNowFlushable) {
-                ((UntilNowFlushable) flushable).setUntilNowFlushableFunction(() -> flushUntil(currIndex));
+            if (flushable instanceof SequenceFlushable) {
+                ((SequenceFlushable) flushable).setSequenceFlushableFunction(() -> sequenceFlush(currIndex));
             }
         }
 

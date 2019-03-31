@@ -228,11 +228,11 @@ public class FlushableRegistryTest {
 
     }
 
-    class MyFlushableUntil implements Flushable, MyFlushable, FlushableRegistry.UntilNowFlushable {
+    class MyFlushableUntil implements Flushable, MyFlushable, FlushableRegistry.SequenceFlushable {
 
         final int createIndex;
         Integer flushIndex;
-        Runnable flushUntilFunction;
+        Runnable sequenceFlushableFunction;
 
         MyFlushableUntil(int index) {
             this.createIndex = index;
@@ -254,7 +254,7 @@ public class FlushableRegistryTest {
 
         @Override
         public void flush() {
-            if (!FlushableRegistry.UntilNowFlushable.flush(this.flushUntilFunction)) {
+            if (!FlushableRegistry.SequenceFlushable.flush(this.sequenceFlushableFunction)) {
                 realFlush();
             }
         }
@@ -273,8 +273,8 @@ public class FlushableRegistryTest {
         }
 
         @Override
-        public void setUntilNowFlushableFunction(Runnable flushUntilFunction) {
-            this.flushUntilFunction = flushUntilFunction;
+        public void setSequenceFlushableFunction(Runnable sequenceFlushableFunction) {
+            this.sequenceFlushableFunction = sequenceFlushableFunction;
         }
     }
 

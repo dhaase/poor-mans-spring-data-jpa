@@ -16,17 +16,17 @@ public interface FlushableRegistry {
 
     int sizeCurrent();
 
-    boolean isCurrentInFlushSequence();
+    boolean isCurrentlyInFlushSequence();
 
-    interface UntilNowFlushable {
+    interface SequenceFlushable {
 
         void realFlush();
 
-        void setUntilNowFlushableFunction(final Runnable untilNowFlushableFunction);
+        void setSequenceFlushableFunction(final Runnable sequenceFlushableFunction);
 
-        static boolean flush(final Runnable untilNowFlushableFunction) {
-            if (untilNowFlushableFunction != null) {
-                untilNowFlushableFunction.run();
+        static boolean flush(final Runnable sequenceFlushableFunction) {
+            if (sequenceFlushableFunction != null) {
+                sequenceFlushableFunction.run();
                 return true;
             }
             return false;
