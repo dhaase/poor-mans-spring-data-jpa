@@ -12,7 +12,7 @@ public class ThreadLocalFlushableRegistry implements FlushableRegistry {
     private final ThreadLocalResourceRegistry<ResourceType, FlushableList> registry;
 
     public ThreadLocalFlushableRegistry() {
-        this.registry = ThreadLocalResourceRegistry.newInstance();
+        this.registry = ThreadLocalResourceRegistry.newInstance(ThreadLocalResourceRegistry.RefType.HARD);
     }
 
     @Override

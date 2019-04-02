@@ -40,8 +40,18 @@ public final class ThreadLocalResourceWeakRegistry<K, V1> implements ThreadLocal
     public <V2> V2 computeIfAbsent(final K key, final Function<? super K, ? extends V1> newInstance) {
         final Map<K, Reference<V1>> localMap = getLocalMap();
         final Function<? super K, ? extends Reference<V1>> newInstanceRef = (k) -> newReference(k, newInstance.apply(k));
-        final Reference<V1> ref = localMap.computeIfAbsent(key, newInstanceRef);
-        return (V2) ref.get();
+        final Reference<V1> ref1 = localMap.computeIfAbsent(key, newInstanceRef);
+        final V2 value = (V2) ref1.get();
+        if (value == null) {
+            // Der Wert kann 'null' sein wenn der Garbage-Collector
+            // den Wert in der (Weak-/Soft-) Reference geloescht hat.
+            // Der Eintrag wird aus der Map geloescht:
+            localMap.remove(key);
+            // Jetzt wird ein neuer Wert erzeugt:
+            final Reference<V1> ref2 = localMap.computeIfAbsent(key, newInstanceRef);
+            return (V2) ref2.get();
+        }
+        return value;
     }
 
     @SuppressWarnings("unchecked")
