@@ -7,6 +7,7 @@ import org.springframework.beans.factory.InitializingBean;
 
 import javax.sql.CommonDataSource;
 import java.io.PrintWriter;
+import java.lang.reflect.Proxy;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.Set;
@@ -36,7 +37,7 @@ class AbstractLazyDataSource<T1 extends CommonDataSource> implements CommonDataS
             // eventuelle andere Lazy-Mechanismen
             // auszuhebeln.
             // getLoginTimeout() ist ein API-Call der
-            // die DataSource nicht veraendert:
+            // potentiell die DataSource nicht veraendert:
             memoizingSupplier.get().getLoginTimeout();
         }
     }
@@ -52,6 +53,11 @@ class AbstractLazyDataSource<T1 extends CommonDataSource> implements CommonDataS
         } else {
             throw new IllegalArgumentException("Supplier does not return an object that is a Subclass of " + apiInterfaceSet);
         }
+    }
+
+    @Override
+    public String getDescription() {
+        return this.dataSourceSupplier.getDescription();
     }
 
     @Override
@@ -138,7 +144,8 @@ class AbstractLazyDataSource<T1 extends CommonDataSource> implements CommonDataS
     @Override
     public final String toString() {
         final Object theObject = (memoizingSupplier.isPresent() ? memoizingSupplier.get() : this);
-        return theObject.getClass().getSimpleName() + "(" + System.identityHashCode(theObject) + "){" + dataSourceSupplier.getDescription() + "}";
+        final String simpleName = (Proxy.isProxyClass(theObject.getClass()) ? "DataSource" : theObject.getClass().getSimpleName());
+        return simpleName + "(" + System.identityHashCode(theObject) + "){" + dataSourceSupplier.getDescription() + "}";
     }
 
 

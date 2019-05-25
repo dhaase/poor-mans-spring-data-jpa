@@ -14,7 +14,7 @@ public class Main {
         ApplicationContext ac = new ClassPathXmlApplicationContext("application-context.xml");
         DataSource ds = ac.getBean("lazyDataSource", DataSource.class);
         System.out.println(ds);
-        //ds.getConnection();
+        ds.getConnection();
         System.out.println(ds);
         System.out.println(new Timestamp(((LazyDataSource)ds).getTimeMillisOfStartup()));
         System.out.println(new Timestamp(((LazyDataSource)ds).getTimeMillisOfInitialization()));

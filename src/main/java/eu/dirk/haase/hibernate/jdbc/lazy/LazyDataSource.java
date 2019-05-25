@@ -12,7 +12,7 @@ import java.sql.SQLException;
  * <p>
  * Nur Zugriffe auf die API der Interfaces {@link DataSource}
  * und {@link XADataSource} f&uuml;hren dazu das das interne
- * DataSource erzeugt und initialisiert wird.
+ * DataSource-Objekt erzeugt und initialisiert wird.
  * <p>
  * Zugriffe auf die API von {@link Object} f&uuml;hren hingegen
  * nicht dazu das das interne DataSource erzeugt und initialisiert
@@ -28,6 +28,14 @@ import java.sql.SQLException;
  * @see XADataSource
  */
 public interface LazyDataSource {
+
+    /**
+     * Liefert eine Beschreibung dieser DataSource.
+     *
+     * @return eine Beschreibung dieser DataSource.
+     */
+    String getDescription();
+
     /**
      * Liefert den Protokollschreiber f&uuml;r das DataSource-Objekt
      * (das von internen Supplier geliefert wird) zur&uuml;ck.
