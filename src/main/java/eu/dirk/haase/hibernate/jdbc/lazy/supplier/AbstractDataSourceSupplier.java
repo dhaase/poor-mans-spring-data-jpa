@@ -39,7 +39,7 @@ abstract class AbstractDataSourceSupplier<T extends CommonDataSource> implements
     }
 
     @Override
-    public Set<Class<?>> getApiInterfaceSet() {
+    public final Set<Class<?>> getApiInterfaceSet() {
         return apiInterfaceSet;
     }
 
@@ -58,7 +58,7 @@ abstract class AbstractDataSourceSupplier<T extends CommonDataSource> implements
     abstract T getInternal();
 
     @Override
-    public PrintWriter getLogWriter() {
+    public final PrintWriter getLogWriter() {
         return logWriter;
     }
 
@@ -68,7 +68,7 @@ abstract class AbstractDataSourceSupplier<T extends CommonDataSource> implements
     }
 
     @Override
-    public int getLoginTimeout() {
+    public final int getLoginTimeout() {
         return (loginTimeout != null ? loginTimeout : 0);
     }
 
@@ -100,13 +100,13 @@ abstract class AbstractDataSourceSupplier<T extends CommonDataSource> implements
     }
 
     @Override
-    public void invalidate() {
+    public final void invalidate() {
         isInitialized = false;
         initializedTimeMillis = -1;
     }
 
     @Override
-    public boolean isInitialized() {
+    public final boolean isInitialized() {
         return isInitialized;
     }
 

@@ -36,12 +36,12 @@ public final class CLazyHybridXADataSource
     }
 
     @Override
-    public XAConnection getXAConnection() throws SQLException {
+    public final XAConnection getXAConnection() throws SQLException {
         return delegateSupplier.get().getXAConnection();
     }
 
     @Override
-    public XAConnection getXAConnection(String user, String password) throws SQLException {
+    public final XAConnection getXAConnection(String user, String password) throws SQLException {
         return delegateSupplier.get().getXAConnection(user, password);
     }
 

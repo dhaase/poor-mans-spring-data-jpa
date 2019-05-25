@@ -38,38 +38,38 @@ abstract class AbstractJndiDataSourceSupplier<T extends CommonDataSource> extend
         return (T) this.jndiObjectFactoryBean.getObject();
     }
 
-    public void setBeanClassLoader(ClassLoader classLoader) {
+    public final void setBeanClassLoader(ClassLoader classLoader) {
         jndiObjectFactoryBean.setBeanClassLoader(classLoader);
     }
 
-    public void setCache(boolean cache) {
+    public final void setCache(boolean cache) {
         jndiObjectFactoryBean.setCache(cache);
     }
 
-    public void setDefaultObject(Object defaultObject) {
+    public final void setDefaultObject(Object defaultObject) {
         jndiObjectFactoryBean.setDefaultObject(defaultObject);
     }
 
-    public void setExpectedType(Class<?> expectedType) {
+    public final void setExpectedType(Class<?> expectedType) {
         jndiObjectFactoryBean.setExpectedType(expectedType);
     }
 
-    public void setExposeAccessContext(boolean exposeAccessContext) {
+    public final void setExposeAccessContext(boolean exposeAccessContext) {
         jndiObjectFactoryBean.setExposeAccessContext(exposeAccessContext);
     }
 
-    public void setJndiEnvironment(Properties jndiEnvironment) {
+    public final void setJndiEnvironment(Properties jndiEnvironment) {
         jndiObjectFactoryBean.setJndiEnvironment(jndiEnvironment);
     }
 
-    public void setJndiName(String jndiName) {
+    public final void setJndiName(String jndiName) {
         if (getDescription() == null) {
             setDescription(jndiName);
         }
         jndiObjectFactoryBean.setJndiName(jndiName);
     }
 
-    public void setJndiTemplate(JndiTemplate jndiTemplate) {
+    public final void setJndiTemplate(JndiTemplate jndiTemplate) {
         jndiObjectFactoryBean.setJndiTemplate(jndiTemplate);
     }
 
@@ -85,7 +85,7 @@ abstract class AbstractJndiDataSourceSupplier<T extends CommonDataSource> extend
         jndiObjectFactoryBean.setProxyInterfaces(proxyInterfaces);
     }
 
-    public void setResourceRef(boolean resourceRef) {
+    public final void setResourceRef(boolean resourceRef) {
         jndiObjectFactoryBean.setResourceRef(resourceRef);
     }
 

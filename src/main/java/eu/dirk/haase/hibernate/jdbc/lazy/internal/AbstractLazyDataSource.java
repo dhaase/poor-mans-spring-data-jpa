@@ -30,7 +30,7 @@ abstract class AbstractLazyDataSource<T1 extends CommonDataSource> implements Co
     }
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public final void afterPropertiesSet() throws Exception {
         if (!isLazyInit) {
             // Initialisiere das innere Objekt
             // und mache den ersten API-Call um
@@ -56,7 +56,7 @@ abstract class AbstractLazyDataSource<T1 extends CommonDataSource> implements Co
     }
 
     @Override
-    public String getDescription() {
+    public final String getDescription() {
         return this.dataSourceSupplier.getDescription();
     }
 
@@ -112,7 +112,7 @@ abstract class AbstractLazyDataSource<T1 extends CommonDataSource> implements Co
     }
 
     @Override
-    public int identityHashCode() {
+    public final int identityHashCode() {
         if (memoizingSupplier.isPresent()) {
             return System.identityHashCode(memoizingSupplier.get());
         } else {
@@ -127,12 +127,12 @@ abstract class AbstractLazyDataSource<T1 extends CommonDataSource> implements Co
     }
 
     @Override
-    public boolean isLazyInit() {
+    public final boolean isLazyInit() {
         return isLazyInit;
     }
 
     @Override
-    public void setLazyInit(boolean lazyInit) {
+    public final void setLazyInit(boolean lazyInit) {
         isLazyInit = lazyInit;
     }
 

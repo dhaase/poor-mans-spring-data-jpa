@@ -35,12 +35,12 @@ public final class CLazyXADataSource<T1 extends XADataSource> extends AbstractLa
 
 
     @Override
-    public XAConnection getXAConnection() throws SQLException {
+    public final XAConnection getXAConnection() throws SQLException {
         return this.delegateSupplier.get().getXAConnection();
     }
 
     @Override
-    public XAConnection getXAConnection(String user, String password) throws SQLException {
+    public final XAConnection getXAConnection(String user, String password) throws SQLException {
         return this.delegateSupplier.get().getXAConnection(user, password);
     }
 }
