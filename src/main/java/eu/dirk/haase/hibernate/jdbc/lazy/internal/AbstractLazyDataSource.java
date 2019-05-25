@@ -7,7 +7,6 @@ import org.springframework.beans.factory.InitializingBean;
 
 import javax.sql.CommonDataSource;
 import java.io.PrintWriter;
-import java.lang.reflect.Proxy;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.Set;
@@ -144,7 +143,9 @@ abstract class AbstractLazyDataSource<T1 extends CommonDataSource> implements Co
     @Override
     public final String toString() {
         final Object theObject = (memoizingSupplier.isPresent() ? memoizingSupplier.get() : this);
-        final String simpleName = (Proxy.isProxyClass(theObject.getClass()) ? "DataSource" : theObject.getClass().getSimpleName());
+        final String simpleName = (memoizingSupplier.isPresent()
+                ? (dataSourceSupplier.isProxy() ? "DataSource" : theObject.getClass().getSimpleName())
+                : dataSourceSupplier.getClass().getSimpleName());
         return simpleName + "(" + System.identityHashCode(theObject) + "){" + dataSourceSupplier.getDescription() + "}";
     }
 

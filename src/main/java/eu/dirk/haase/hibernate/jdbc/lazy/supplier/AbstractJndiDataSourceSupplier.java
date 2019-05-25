@@ -38,6 +38,11 @@ abstract class AbstractJndiDataSourceSupplier<T extends CommonDataSource> extend
         return (T) this.jndiObjectFactoryBean.getObject();
     }
 
+    @Override
+    public final boolean isProxy() {
+        return true;
+    }
+
     public final void setBeanClassLoader(ClassLoader classLoader) {
         jndiObjectFactoryBean.setBeanClassLoader(classLoader);
     }

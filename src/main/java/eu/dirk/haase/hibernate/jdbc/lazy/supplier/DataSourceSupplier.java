@@ -27,6 +27,17 @@ public interface DataSourceSupplier<T extends CommonDataSource> extends Supplier
     Set<Class<?>> getApiInterfaceSet();
 
     /**
+     * Liefert {@code true} wenn der Supplier seinerseits
+     * ein Proxy-Objekt liefert.
+     *
+     * @return {@code true} wenn der Supplier seinerseits
+     * ein Proxy-Objekt liefert.
+     */
+    default boolean isProxy() {
+        return false;
+    }
+
+    /**
      * Liefert eine Beschreibung dieses Suppliers.
      *
      * @return eine Beschreibung dieses Suppliers.
