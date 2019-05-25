@@ -160,8 +160,7 @@ public interface LazyDataSource {
 
     /**
      * Bei {@code true} wird die zugrundeliegende DataSource
-     * erst beim ersten API-Zugriff erzeugt und
-     * initialisiert.
+     * erst beim ersten API-Zugriff erzeugt und initialisiert.
      * <p>
      * Der Standardwert ist {@code true}.
      *
