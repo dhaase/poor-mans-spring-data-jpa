@@ -13,7 +13,7 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.util.Set;
 import java.util.logging.Logger;
 
-class AbstractLazyDataSource<T1 extends CommonDataSource> implements CommonDataSource, LazyDataSource, InitializingBean {
+abstract class AbstractLazyDataSource<T1 extends CommonDataSource> implements CommonDataSource, LazyDataSource, InitializingBean {
 
     private final DataSourceSupplier<T1> dataSourceSupplier;
     private final MemoizingSupplier<T1> memoizingSupplier;
@@ -34,9 +34,9 @@ class AbstractLazyDataSource<T1 extends CommonDataSource> implements CommonDataS
         if (!isLazyInit) {
             // Initialisiere das innere Objekt
             // und mache den ersten API-Call um
-            // eventuelle andere Lazy-Mechanismen
+            // eventuell andere Lazy-Mechanismen
             // auszuhebeln.
-            // getLoginTimeout() ist ein API-Call der
+            // getLoginTimeout() ist eine Methode die
             // potentiell die DataSource nicht veraendert:
             memoizingSupplier.get().getLoginTimeout();
         }

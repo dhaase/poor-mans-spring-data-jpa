@@ -7,7 +7,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-public abstract class AbstractDataSourceSupplier<T extends CommonDataSource> implements DataSourceSupplier<T> {
+abstract class AbstractDataSourceSupplier<T extends CommonDataSource> implements DataSourceSupplier<T> {
 
     private final Set<Class<?>> apiInterfaceSet;
     private String description;

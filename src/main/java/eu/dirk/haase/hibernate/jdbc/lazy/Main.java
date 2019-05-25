@@ -10,7 +10,7 @@ import java.sql.Timestamp;
 
 public class Main {
 
-    public static void main(String... args) throws SQLException, InterruptedException, IOException, ClassNotFoundException {
+    public static void main(String... args) throws SQLException {
         ApplicationContext ac = new ClassPathXmlApplicationContext("application-context.xml");
         DataSource ds = ac.getBean("lazyDataSource", DataSource.class);
         System.out.println(ds);

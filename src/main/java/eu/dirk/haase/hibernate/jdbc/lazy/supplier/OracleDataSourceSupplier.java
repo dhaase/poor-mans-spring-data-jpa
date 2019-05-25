@@ -22,6 +22,7 @@ public final class OracleDataSourceSupplier<T extends DataSource & XADataSource 
         super(API_INTERFACES);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     T getInternal() {
         try {

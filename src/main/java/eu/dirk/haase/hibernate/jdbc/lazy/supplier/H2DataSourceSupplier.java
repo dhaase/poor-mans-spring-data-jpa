@@ -16,6 +16,7 @@ public final class H2DataSourceSupplier<T extends DataSource & XADataSource & Co
         super(API_INTERFACES);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     T getInternal() {
         final JdbcDataSource jdbcDataSource = new JdbcDataSource();

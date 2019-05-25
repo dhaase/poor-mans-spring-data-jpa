@@ -25,6 +25,7 @@ abstract class AbstractJndiDataSourceSupplier<T extends CommonDataSource> extend
         setLookupOnStartup(false);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     final T getInternal() {
         if (!isInitialized()) {
@@ -72,15 +73,15 @@ abstract class AbstractJndiDataSourceSupplier<T extends CommonDataSource> extend
         jndiObjectFactoryBean.setJndiTemplate(jndiTemplate);
     }
 
-    public void setLookupOnStartup(boolean lookupOnStartup) {
+    private void setLookupOnStartup(boolean lookupOnStartup) {
         jndiObjectFactoryBean.setLookupOnStartup(lookupOnStartup);
     }
 
-    public void setProxyInterface(Class proxyInterface) {
+    private void setProxyInterface(Class proxyInterface) {
         jndiObjectFactoryBean.setProxyInterface(proxyInterface);
     }
 
-    public void setProxyInterfaces(Class[] proxyInterfaces) {
+    private void setProxyInterfaces(Class[] proxyInterfaces) {
         jndiObjectFactoryBean.setProxyInterfaces(proxyInterfaces);
     }
 
