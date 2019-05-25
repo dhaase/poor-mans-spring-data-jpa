@@ -110,7 +110,7 @@ public abstract class AbstractDataSourceSupplier<T extends CommonDataSource> imp
 
     @Override
     public final String toString() {
-        return "DataSourceSupplier(" + System.identityHashCode(this) + "){" + getDescription() + "}";
+        return getClass().getSimpleName() + "(" + System.identityHashCode(this) + "){" + getDescription() + "}";
     }
 
 }

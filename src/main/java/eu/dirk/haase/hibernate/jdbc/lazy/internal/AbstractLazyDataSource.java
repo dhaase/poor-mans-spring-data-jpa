@@ -139,9 +139,8 @@ class AbstractLazyDataSource<T1 extends CommonDataSource> implements CommonDataS
 
     @Override
     public final String toString() {
-        return memoizingSupplier.isPresent()
-                ? memoizingSupplier.get().toString()
-                : "LazyDataSource(" + System.identityHashCode(this) + "){" + dataSourceSupplier.getDescription() + "}";
+        final Object theObject = (memoizingSupplier.isPresent() ? memoizingSupplier.get() : this);
+        return theObject.getClass().getSimpleName() + "(" + System.identityHashCode(theObject) + "){" + dataSourceSupplier.getDescription() + "}";
     }
 
 
