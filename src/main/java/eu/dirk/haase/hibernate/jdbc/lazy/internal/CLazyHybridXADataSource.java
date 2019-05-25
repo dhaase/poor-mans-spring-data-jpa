@@ -1,7 +1,7 @@
 package eu.dirk.haase.hibernate.jdbc.lazy.internal;
 
-import eu.dirk.haase.MemoizingSupplier;
-import eu.dirk.haase.jdbc.lazy.supplier.DataSourceSupplier;
+import eu.dirk.haase.hibernate.jdbc.lazy.MemoizingSupplier;
+import eu.dirk.haase.hibernate.jdbc.lazy.supplier.DataSourceSupplier;
 
 import javax.sql.DataSource;
 import javax.sql.XAConnection;
@@ -31,7 +31,7 @@ public final class CLazyHybridXADataSource
     private CLazyHybridXADataSource(final Set<Class<?>> apiInterfaceSet,
                                     final DataSourceSupplier<T1> dataSourceSupplier,
                                     final MemoizingSupplier<T1> memoizingSupplier) {
-        super(apiInterfaceSet,dataSourceSupplier, memoizingSupplier);
+        super(apiInterfaceSet, dataSourceSupplier, memoizingSupplier);
         this.delegateSupplier = memoizingSupplier;
     }
 

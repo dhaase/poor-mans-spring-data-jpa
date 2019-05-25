@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context.xsd">
+
+
+
+    <bean id="lazyDataSource" class="eu.dirk.haase.hibernate.jdbc.lazy.LazyDataSourceFactory" factory-method="lazyDataSource">
+        <constructor-arg>
+            <bean id="jndiDataSource" class="eu.dirk.haase.hibernate.jdbc.lazy.supplier.JndiDataSourceSupplier">
+                <property name="jndiName" value="java:comp/env/jdbc/MyLocalDB"/>
+                <property name="lookupOnStartup" value="false"/>
+            </bean>
+<!--
+            <bean id="h2DataSource" class="eu.dirk.haase.jdbc.lazy.supplier.H2DataSourceSupplier">
+                <property name="url" value="jdbc:h2:mem:test"/>
+                <property name="user" value="sa"/>
+                <property name="password" value="sa"/>
+            </bean>
+-->
+<!--
+            <bean id="oracleDataSource" class="eu.dirk.haase.jdbc.lazy.supplier.OracleDataSourceSupplier">
+                <property name="url" value="jdbc:oracle:thin:@localhost:1521:XE"/>
+                <property name="user" value="sa"/>
+                <property name="password" value="sa"/>
+            </bean>
+-->
+        </constructor-arg>
+        <property name="lazyInit" value="true"/>
+    </bean>
+
+
+
+</beans>

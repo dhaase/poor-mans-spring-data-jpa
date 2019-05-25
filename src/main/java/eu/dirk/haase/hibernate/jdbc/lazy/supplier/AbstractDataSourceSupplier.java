@@ -19,7 +19,7 @@ public abstract class AbstractDataSourceSupplier<T extends CommonDataSource> imp
         this.apiInterfaceSet = buildApiSet(apiInterfaces);
     }
 
-    private Set<Class<?>> buildApiSet(Class<?>[] apiInterfaces) {
+    private Set<Class<?>> buildApiSet(final Class<?>[] apiInterfaces) {
         final Set<Class<?>> apiSet = new HashSet<>();
         for (final Class<?> clazz : apiInterfaces) {
             apiSet.add(clazz);
@@ -49,8 +49,10 @@ public abstract class AbstractDataSourceSupplier<T extends CommonDataSource> imp
     }
 
     @Override
-    public final void setDescription(String description) {
-        this.description = description;
+    public final void setDescription(final String description) {
+        if (description != null) {
+            this.description = description;
+        }
     }
 
     abstract T getInternal();
@@ -71,7 +73,7 @@ public abstract class AbstractDataSourceSupplier<T extends CommonDataSource> imp
     }
 
     @Override
-    public final void setLoginTimeout(int loginTimeoutSeconds) {
+    public final void setLoginTimeout(final int loginTimeoutSeconds) {
         this.loginTimeout = loginTimeout;
     }
 

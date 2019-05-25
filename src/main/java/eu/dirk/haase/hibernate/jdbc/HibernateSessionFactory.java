@@ -1,6 +1,7 @@
 package eu.dirk.haase.hibernate.jdbc;
 
 import org.hibernate.*;
+import org.hibernate.Cache;
 import org.hibernate.classic.Session;
 import org.hibernate.engine.FilterDefinition;
 import org.hibernate.metadata.ClassMetadata;
@@ -10,7 +11,6 @@ import org.hibernate.stat.Statistics;
 import javax.naming.NamingException;
 import javax.naming.Reference;
 import java.io.Serializable;
-import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.util.Map;
 import java.util.Set;
@@ -83,10 +83,6 @@ public class HibernateSessionFactory implements SessionFactory {
         return delegate.getAllCollectionMetadata();
     }
 
-    @Override
-    public Cache getCache() {
-        return delegate.getCache();
-    }
 
     @Override
     public ClassMetadata getClassMetadata(Class persistentClass) throws HibernateException {
@@ -137,6 +133,11 @@ public class HibernateSessionFactory implements SessionFactory {
     @Override
     public boolean isClosed() {
         return delegate.isClosed();
+    }
+
+    @Override
+    public Cache getCache() {
+        return null;
     }
 
     @Override

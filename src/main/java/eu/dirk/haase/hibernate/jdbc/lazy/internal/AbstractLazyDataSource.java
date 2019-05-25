@@ -1,10 +1,8 @@
 package eu.dirk.haase.hibernate.jdbc.lazy.internal;
 
-import eu.dirk.haase.MemoizingSupplier;
 import eu.dirk.haase.hibernate.jdbc.lazy.LazyDataSource;
+import eu.dirk.haase.hibernate.jdbc.lazy.MemoizingSupplier;
 import eu.dirk.haase.hibernate.jdbc.lazy.supplier.DataSourceSupplier;
-import eu.dirk.haase.jdbc.lazy.LazyDataSource;
-import eu.dirk.haase.jdbc.lazy.supplier.DataSourceSupplier;
 import org.springframework.beans.factory.InitializingBean;
 
 import javax.sql.CommonDataSource;

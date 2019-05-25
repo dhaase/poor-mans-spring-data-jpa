@@ -1,9 +1,10 @@
 package eu.dirk.haase.hibernate.jdbc.lazy;
 
-import eu.dirk.haase.jdbc.lazy.internal.CLazyDataSource;
-import eu.dirk.haase.jdbc.lazy.internal.CLazyHybridXADataSource;
-import eu.dirk.haase.jdbc.lazy.internal.CLazyXADataSource;
-import eu.dirk.haase.jdbc.lazy.supplier.DataSourceSupplier;
+
+import eu.dirk.haase.hibernate.jdbc.lazy.internal.CLazyDataSource;
+import eu.dirk.haase.hibernate.jdbc.lazy.internal.CLazyHybridXADataSource;
+import eu.dirk.haase.hibernate.jdbc.lazy.internal.CLazyXADataSource;
+import eu.dirk.haase.hibernate.jdbc.lazy.supplier.DataSourceSupplier;
 
 import javax.sql.DataSource;
 import javax.sql.XADataSource;

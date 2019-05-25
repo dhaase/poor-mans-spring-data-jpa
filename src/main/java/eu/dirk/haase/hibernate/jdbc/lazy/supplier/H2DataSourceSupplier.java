@@ -30,7 +30,9 @@ public final class H2DataSourceSupplier<T extends DataSource & XADataSource & Co
     }
 
     public void setUrl(final String url) {
-        setDescription(url);
+        if (getDescription() == null) {
+            setDescription(url);
+        }
         this.url = url;
     }
 

@@ -62,7 +62,9 @@ abstract class AbstractJndiDataSourceSupplier<T extends CommonDataSource> extend
     }
 
     public void setJndiName(String jndiName) {
-        setDescription(jndiName);
+        if (getDescription() == null) {
+            setDescription(jndiName);
+        }
         jndiObjectFactoryBean.setJndiName(jndiName);
     }
 

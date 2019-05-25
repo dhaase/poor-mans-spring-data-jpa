@@ -40,7 +40,9 @@ public final class OracleDataSourceSupplier<T extends DataSource & XADataSource 
     }
 
     public void setUrl(final String url) {
-        setDescription(url);
+        if (getDescription() == null) {
+            setDescription(url);
+        }
         this.url = url;
     }
 
