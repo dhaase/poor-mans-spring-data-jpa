@@ -20,7 +20,7 @@ public class Main {
         System.out.println(new Timestamp(((LazyDataSource)ds).getTimeMillisOfInitialization()));
         System.out.println(((LazyDataSource)ds).identityHashCode());
         ((LazyDataSource)ds).invalidate();
-        //ds.getConnection();
+        ds.getConnection();
         System.out.println(new Timestamp(((LazyDataSource)ds).getTimeMillisOfStartup()));
         System.out.println(new Timestamp(((LazyDataSource)ds).getTimeMillisOfInitialization()));
         System.out.println(((LazyDataSource)ds).identityHashCode());
