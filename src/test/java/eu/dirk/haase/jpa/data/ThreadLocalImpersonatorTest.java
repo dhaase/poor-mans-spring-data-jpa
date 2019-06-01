@@ -232,15 +232,18 @@ public class ThreadLocalImpersonatorTest {
         //    -> Enter Level One
         ImpersonationContext context1 = impersonator.impersonate("user-1");
         //        -> Enter Level Two
-        impersonator.impersonate("user-2");
+        ImpersonationContext context2 = impersonator.impersonate("user-2");
         //            -> Enter Level Three
-        impersonator.impersonate("user-3");
+        ImpersonationContext context3 = impersonator.impersonate("user-3");
         //    <- Leave Level One (leaving two and three implicitly)
         context1.close();
         String afterImpersonation = currentUserSupplier.get();
         // Then -----------------------------------
         assertThat(beforeImpersonation).isNull();
         assertThat(afterImpersonation).isNull();
+        assertThat(context1.isClosed()).isTrue();
+        assertThat(context2.isClosed()).isTrue();
+        assertThat(context3.isClosed()).isTrue();
     }
 
 }
