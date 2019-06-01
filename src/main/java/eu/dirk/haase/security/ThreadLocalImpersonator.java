@@ -16,6 +16,12 @@ public final class ThreadLocalImpersonator implements Impersonator {
     }
 
     @Override
+    public void clear() {
+        this.currentUserThreadLocal.remove();
+        this.currentContextThreadLocal.remove();
+    }
+
+    @Override
     public Supplier<String> currentUserSupplier() {
         return () -> this.currentUserThreadLocal.get();
     }

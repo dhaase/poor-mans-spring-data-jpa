@@ -3,6 +3,7 @@ package eu.dirk.haase.security;
 import java.util.function.Supplier;
 
 public interface Impersonator {
+    void clear();
 
     Supplier<String> currentUserSupplier();
 
