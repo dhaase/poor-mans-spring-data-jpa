@@ -6,7 +6,7 @@ package eu.dirk.haase.security;
  * User auszuf&uuml;hren.
  * <p>
  * Bevor zu einem neuen User gewechselt wird, werden automatisch
- * eventuelle vorgelagerte potentielle Datenbank-&Auml;nderungen,
+ * eventuell vorgelagerte potentielle Datenbank-&Auml;nderungen,
  * die in der Vergangenheit aufgelaufen sind, abgesetzt (flushed).
  * <p>
  * Dieses Kontext-Objekt sollte nur mittels des try-with-resources

@@ -99,7 +99,7 @@ public interface Impersonator {
      * ausgef&uuml;hrt werden soll.
      * <p>
      * Bevor zu einem neuen User gewechselt wird, werden automatisch
-     * eventuelle vorgelagerte potentielle Datenbank-&Auml;nderungen,
+     * eventuell vorgelagerte potentielle Datenbank-&Auml;nderungen,
      * die in der Vergangenheit aufgelaufen sind, abgesetzt (flushed).
      * <p>
      * Beispiel:
@@ -132,7 +132,7 @@ public interface Impersonator {
      * {@link ImpersonationContext#close()}.
      * <p>
      * Bevor zu einem neuen User gewechselt wird, werden automatisch
-     * eventuelle vorgelagerte potentielle Datenbank-&Auml;nderungen,
+     * eventuell vorgelagerte potentielle Datenbank-&Auml;nderungen,
      * die in der Vergangenheit aufgelaufen sind, abgesetzt (flushed).
      * <p>
      * Wird bei geschachtelten Kontext-Objekten nur das &auml;ssere
