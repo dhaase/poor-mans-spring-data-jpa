@@ -1,11 +1,12 @@
 package eu.dirk.haase.security;
 
 /**
- * Dieses Kontext-Objekt wird durch {@link Impersonator#impersonate(java.lang.String)}
- * erzeugt.
+ * &Auml;ndert den User f&uuml;r den ausf&uuml;hrenden Thread um
+ * nachfolgende Datenbank-Statenments unter dem ge&auml;nderten
+ * User auszuf&uuml;hren.
  * <p>
- * Dieses Kontext-Objekt sollte nur mittels des try-with-resources Idioms
- * gesetzt werden:
+ * Dieses Kontext-Objekt sollte nur mittels des try-with-resources
+ * Idioms gesetzt werden:
  * <pre><code>
  * // Bis zu dieser Stelle werden die folgenden Datenbank-Statenments
  * // noch mit dem User alten User ausgefuehrt.

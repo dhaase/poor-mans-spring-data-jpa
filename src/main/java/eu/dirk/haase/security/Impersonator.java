@@ -72,8 +72,11 @@ public interface Impersonator {
      * <p>
      * Wird {@code null} geliefert dann wurde f&uuml;r den
      * ausf&uuml;hrenden Thread kein (neuer) User gesetzt.
+     * Es ist dann kein Identit&auml;tswechsel (=Impersonation)
+     * aktiv.
      *
-     * @return der jeweils g&uuml;ltige User.
+     * @return ein {@link Supplier} der den jeweils g&uuml;ltigen
+     * User liefert.
      */
     Supplier<String> currentUserSupplier();
 
@@ -103,7 +106,9 @@ public interface Impersonator {
 
 
     /**
-     * &Auml;ndert den User f&uuml;r den ausf&uuml;hrenden Thread.
+     * &Auml;ndert den User f&uuml;r den ausf&uuml;hrenden Thread um
+     * nachfolgende Datenbank-Statenments unter dem ge&auml;nderten
+     * User auszuf&uuml;hren.
      * <p>
      * Beendet wird der tempor&auml;re Userwechsel mit der Methode
      * {@link ImpersonationContext#close()}.
@@ -127,14 +132,14 @@ public interface Impersonator {
      * </code></pre>
      * <p>
      * Achtung: Wird der tempor&auml;ren Userwechsel nicht mittels
-     * {@link ImpersonationContext#close()} beendet dann bleibt
+     * {@code ImpersonationContext.close()} beendet dann bleibt
      * er solange bestehen bis sich der Service-Call von selbst
      * beendet hat.
      *
      * @param runAsUser der User zum der ausf&uuml;hrenden Thread ge&auml;ndert
      *                  werden soll.
      * @return Kontext-Objekt um den tempor&auml;ren Userwechsel mittels
-     * {@link ImpersonationContext#close()} zu beenden.
+     * {@code ImpersonationContext.close()} zu beenden.
      */
     ImpersonationContext impersonate(final String runAsUser);
 
