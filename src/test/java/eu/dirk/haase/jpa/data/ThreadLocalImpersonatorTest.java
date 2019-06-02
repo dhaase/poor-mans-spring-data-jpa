@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ThreadLocalImpersonatorTest {
 
     @Test
-    public void test_that_user_is_changed_in_a_sequence_of_contexts() {
+    public void test_with_context_object_that_user_is_changed_in_a_sequence_of_contexts() {
         // Given
         Impersonator impersonator = new ThreadLocalImpersonator(() -> {
         });
@@ -55,50 +55,7 @@ public class ThreadLocalImpersonatorTest {
     }
 
     @Test
-    public void test_that_user_is_changed_in_a_sequence_of_runnable() {
-        // Given
-        final String[] currUserInner1 = {null};
-        final String[] currUserInner2 = {null};
-        final String[] currUserInner3 = {null};
-        Impersonator impersonator = new ThreadLocalImpersonator(() -> {
-        });
-        Supplier<String> currentUserSupplier = impersonator.currentUserSupplier();
-        // When
-        //     Do First change
-        String beforeImpersonation1 = currentUserSupplier.get();
-        impersonator.impersonate("user-1", () -> {
-            currUserInner1[0] = currentUserSupplier.get();
-        });
-        String afterImpersonation1 = currentUserSupplier.get();
-        //     Do Second change
-        String beforeImpersonation2 = currentUserSupplier.get();
-        impersonator.impersonate("user-2", () -> {
-            currUserInner2[0] = currentUserSupplier.get();
-        });
-        String afterImpersonation2 = currentUserSupplier.get();
-        //     Do Third change
-        String beforeImpersonation3 = currentUserSupplier.get();
-        impersonator.impersonate("user-3", () -> {
-            currUserInner3[0] = currentUserSupplier.get();
-        });
-        String afterImpersonation3 = currentUserSupplier.get();
-        // Then
-        //     Assert First change
-        assertThat(beforeImpersonation1).isNull();
-        assertThat(currUserInner1[0]).isEqualTo("user-1");
-        assertThat(afterImpersonation1).isNull();
-        //     Assert Second change
-        assertThat(beforeImpersonation2).isNull();
-        assertThat(currUserInner2[0]).isEqualTo("user-2");
-        assertThat(afterImpersonation2).isNull();
-        //     Assert Third change
-        assertThat(beforeImpersonation3).isNull();
-        assertThat(currUserInner3[0]).isEqualTo("user-3");
-        assertThat(afterImpersonation3).isNull();
-    }
-
-    @Test
-    public void test_that_user_is_changed_while_context_is_active() {
+    public void test_with_context_object_that_user_is_changed_while_context_is_active() {
         // Given
         Impersonator impersonator = new ThreadLocalImpersonator(() -> {
         });
@@ -116,7 +73,7 @@ public class ThreadLocalImpersonatorTest {
     }
 
     @Test
-    public void test_that_user_is_changed_while_nested_context_is_active() {
+    public void test_with_context_object_that_user_is_changed_while_nested_context_is_active() {
         // Given -----------------------------------
         Impersonator impersonator = new ThreadLocalImpersonator(() -> {
         });
@@ -170,7 +127,75 @@ public class ThreadLocalImpersonatorTest {
     }
 
     @Test
-    public void test_that_user_is_changed_while_nested_runnable_is_active() {
+    public void test_with_context_object_that_user_is_restored_when_only_outer_context_is_closed() {
+        // Given -----------------------------------
+        Impersonator impersonator = new ThreadLocalImpersonator(() -> {
+        });
+        Supplier<String> currentUserSupplier = impersonator.currentUserSupplier();
+        // When -----------------------------------
+        String beforeImpersonation = currentUserSupplier.get();
+        //    -> Enter Level One
+        ImpersonationContext context1 = impersonator.impersonate("user-1");
+        //        -> Enter Level Two
+        ImpersonationContext context2 = impersonator.impersonate("user-2");
+        //            -> Enter Level Three
+        ImpersonationContext context3 = impersonator.impersonate("user-3");
+        //    <- Leave Level One (leaving two and three implicitly)
+        context1.close();
+        String afterImpersonation = currentUserSupplier.get();
+        // Then -----------------------------------
+        assertThat(beforeImpersonation).isNull();
+        assertThat(afterImpersonation).isNull();
+        assertThat(context1.isClosed()).isTrue();
+        assertThat(context2.isClosed()).isTrue();
+        assertThat(context3.isClosed()).isTrue();
+    }
+
+    @Test
+    public void test_with_lamda_that_user_is_changed_in_a_sequence_of_runnable() {
+        // Given
+        final String[] currUserInner1 = {null};
+        final String[] currUserInner2 = {null};
+        final String[] currUserInner3 = {null};
+        Impersonator impersonator = new ThreadLocalImpersonator(() -> {
+        });
+        Supplier<String> currentUserSupplier = impersonator.currentUserSupplier();
+        // When
+        //     Do First change
+        String beforeImpersonation1 = currentUserSupplier.get();
+        impersonator.impersonate("user-1", () -> {
+            currUserInner1[0] = currentUserSupplier.get();
+        });
+        String afterImpersonation1 = currentUserSupplier.get();
+        //     Do Second change
+        String beforeImpersonation2 = currentUserSupplier.get();
+        impersonator.impersonate("user-2", () -> {
+            currUserInner2[0] = currentUserSupplier.get();
+        });
+        String afterImpersonation2 = currentUserSupplier.get();
+        //     Do Third change
+        String beforeImpersonation3 = currentUserSupplier.get();
+        impersonator.impersonate("user-3", () -> {
+            currUserInner3[0] = currentUserSupplier.get();
+        });
+        String afterImpersonation3 = currentUserSupplier.get();
+        // Then
+        //     Assert First change
+        assertThat(beforeImpersonation1).isNull();
+        assertThat(currUserInner1[0]).isEqualTo("user-1");
+        assertThat(afterImpersonation1).isNull();
+        //     Assert Second change
+        assertThat(beforeImpersonation2).isNull();
+        assertThat(currUserInner2[0]).isEqualTo("user-2");
+        assertThat(afterImpersonation2).isNull();
+        //     Assert Third change
+        assertThat(beforeImpersonation3).isNull();
+        assertThat(currUserInner3[0]).isEqualTo("user-3");
+        assertThat(afterImpersonation3).isNull();
+    }
+
+    @Test
+    public void test_with_lamda_that_user_is_changed_while_nested_runnable_is_active() {
         // Given
         final String[] currUserInner1 = {null, null};
         final String[] currUserInner2 = {null, null};
@@ -199,6 +224,25 @@ public class ThreadLocalImpersonatorTest {
         assertThat(currUserInner3[0]).isEqualTo("user-3");
         assertThat(currUserInner2[1]).isEqualTo("user-2");
         assertThat(currUserInner1[1]).isEqualTo("user-1");
+        assertThat(afterImpersonation).isNull();
+    }
+
+    @Test
+    public void test_with_lamda_that_user_is_changed_while_runnable_is_active() {
+        // Given
+        Impersonator impersonator = new ThreadLocalImpersonator(() -> {
+        });
+        Supplier<String> currentUserSupplier = impersonator.currentUserSupplier();
+        // When
+        String beforeImpersonation = currentUserSupplier.get();
+        final String[] currUserInner = {null};
+        impersonator.impersonate("user-1", () -> {
+            currUserInner[0] = currentUserSupplier.get();
+        });
+        String afterImpersonation = currentUserSupplier.get();
+        // Then
+        assertThat(beforeImpersonation).isNull();
+        assertThat(currUserInner[0]).isEqualTo("user-1");
         assertThat(afterImpersonation).isNull();
     }
 
@@ -233,50 +277,6 @@ public class ThreadLocalImpersonatorTest {
         assertThat(currUserInner2[1]).isEqualTo("user-2");
         assertThat(currUserInner1[1]).isEqualTo("user-1");
         assertThat(afterImpersonation).isNull();
-    }
-
-    @Test
-    public void test_that_user_is_changed_while_runnable_is_active() {
-        // Given
-        Impersonator impersonator = new ThreadLocalImpersonator(() -> {
-        });
-        Supplier<String> currentUserSupplier = impersonator.currentUserSupplier();
-        // When
-        String beforeImpersonation = currentUserSupplier.get();
-        final String[] currUserInner = {null};
-        impersonator.impersonate("user-1", () -> {
-            currUserInner[0] = currentUserSupplier.get();
-        });
-        String afterImpersonation = currentUserSupplier.get();
-        // Then
-        assertThat(beforeImpersonation).isNull();
-        assertThat(currUserInner[0]).isEqualTo("user-1");
-        assertThat(afterImpersonation).isNull();
-    }
-
-    @Test
-    public void test_that_user_is_restored_when_only_outer_context_is_closed() {
-        // Given -----------------------------------
-        Impersonator impersonator = new ThreadLocalImpersonator(() -> {
-        });
-        Supplier<String> currentUserSupplier = impersonator.currentUserSupplier();
-        // When -----------------------------------
-        String beforeImpersonation = currentUserSupplier.get();
-        //    -> Enter Level One
-        ImpersonationContext context1 = impersonator.impersonate("user-1");
-        //        -> Enter Level Two
-        ImpersonationContext context2 = impersonator.impersonate("user-2");
-        //            -> Enter Level Three
-        ImpersonationContext context3 = impersonator.impersonate("user-3");
-        //    <- Leave Level One (leaving two and three implicitly)
-        context1.close();
-        String afterImpersonation = currentUserSupplier.get();
-        // Then -----------------------------------
-        assertThat(beforeImpersonation).isNull();
-        assertThat(afterImpersonation).isNull();
-        assertThat(context1.isClosed()).isTrue();
-        assertThat(context2.isClosed()).isTrue();
-        assertThat(context3.isClosed()).isTrue();
     }
 
 }

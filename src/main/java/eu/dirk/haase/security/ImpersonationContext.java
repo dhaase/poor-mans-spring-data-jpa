@@ -5,12 +5,16 @@ package eu.dirk.haase.security;
  * nachfolgende Datenbank-Statenments unter dem ge&auml;nderten
  * User auszuf&uuml;hren.
  * <p>
+ * Bevor zu einem neuen User gewechselt wird, werden automatisch
+ * eventuelle vorgelagerte potentielle Datenbank-&Auml;nderungen,
+ * die in der Vergangenheit aufgelaufen sind, abgesetzt (flushed).
+ * <p>
  * Dieses Kontext-Objekt sollte nur mittels des try-with-resources
  * Idioms gesetzt werden:
  * <pre><code>
  * // Bis zu dieser Stelle werden die folgenden Datenbank-Statenments
  * // noch mit dem User alten User ausgefuehrt.
- * try (ImpersonationContext ctx1 = impersonator.impersonate("neuerUser")) {
+ * try (final ImpersonationContext ctx1 = impersonator.impersonate("neuerUser")) {
  *    // Die folgenden Datenbank-Statenments werden unter dem User
  *    // "neuerUser" ausgefuehrt.
  *    ...
@@ -24,12 +28,14 @@ package eu.dirk.haase.security;
  */
 public interface ImpersonationContext extends AutoCloseable {
     /**
-     * Beendet den tempor&auml;ren Userwechsel.
+     * Beendet den aktuellen tempor&auml;ren Userwechsel.
+     * <p>
+     * Der n&auml;chst &uuml;bergeordnete User wird automatisch
+     * aktiviert.
      * <p>
      * Achtung: Wird der tempor&auml;ren Userwechsel nicht mittels
-     * {@link ImpersonationContext#close()} beendet dann bleibt
-     * er solange bestehen bis sich der Service-Call von selbst
-     * beendet hat.
+     * {@link #close()} beendet dann bleibt er solange bestehen bis
+     * sich der Service-Call von selbst beendet hat.
      */
     void close();
 

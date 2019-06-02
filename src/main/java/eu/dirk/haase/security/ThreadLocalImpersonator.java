@@ -9,7 +9,15 @@ public final class ThreadLocalImpersonator implements Impersonator {
     private final ThreadLocal<String> currentUserThreadLocal;
     private final Runnable flushAllRunnable;
 
+    /**
+     * Erzeugt einen neuen {@code Impersonator} aus einer Standard-Implementation.
+     *
+     * @param flushAllRunnable die Flush-Funktion um vorgelagerte potentielle Datenbank-
+     *                         &Auml;nderungen anzuwendeen bevor der User gewechselt
+     *                         wird.
+     */
     public ThreadLocalImpersonator(final Runnable flushAllRunnable) {
+        Objects.requireNonNull(flushAllRunnable, "Flush-All function can not be null");
         this.flushAllRunnable = flushAllRunnable;
         this.currentUserThreadLocal = new ThreadLocal<>();
         this.currentContextThreadLocal = new ThreadLocal<>();
@@ -19,6 +27,8 @@ public final class ThreadLocalImpersonator implements Impersonator {
     public void clear() {
         final Context context = this.currentContextThreadLocal.get();
         if (context != null) {
+            // Alle inneren Kontexte werden automatisch
+            // geschlossen.
             context.rootContext.close();
         }
         this.currentUserThreadLocal.remove();
@@ -27,7 +37,7 @@ public final class ThreadLocalImpersonator implements Impersonator {
 
     @Override
     public Supplier<String> currentUserSupplier() {
-        return () -> this.currentUserThreadLocal.get();
+        return this.currentUserThreadLocal::get;
     }
 
     @Override
@@ -37,6 +47,7 @@ public final class ThreadLocalImpersonator implements Impersonator {
 
     @Override
     public void impersonate(final String runAsUser, final Runnable command) {
+        Objects.requireNonNull(command, "Runnable-Command can not be null");
         try (final Context context = impersonate(runAsUser)) {
             context.run(command);
         }
@@ -55,6 +66,8 @@ public final class ThreadLocalImpersonator implements Impersonator {
             // Oberste Ebene - keine anderer Context ist aktiv
             this.currentUserThreadLocal.remove();
         } else {
+            // Innere Ebene - weitere uebergeordnete
+            // Contexte sind aktiv:
             this.currentUserThreadLocal.set(lastUser);
         }
     }
@@ -67,6 +80,12 @@ public final class ThreadLocalImpersonator implements Impersonator {
         Context rootContext;
         boolean isClosed;
 
+        /**
+         * Erzeugt einen neuen {@code ImpersonationContext}.
+         *
+         * @param runAsUser der User zum der ausf&uuml;hrenden Thread
+         *                  ge&auml;ndert werden soll.
+         */
         Context(final String runAsUser) {
             Objects.requireNonNull(runAsUser, "Impersonate-User can not be null");
             linkToOuterContext();
@@ -104,11 +123,14 @@ public final class ThreadLocalImpersonator implements Impersonator {
 
         private void linkToOuterContext() {
             final Context outerContext = ThreadLocalImpersonator.this.currentContextThreadLocal.get();
-            if (outerContext != null) {
+            if (outerContext == null) {
+                // Oberste Ebene - keine anderer Context ist aktiv
+                rootContext = this;
+            } else {
+                // Innere Ebene - weitere uebergeordnete
+                // Contexte sind aktiv:
                 outerContext.innerContext = this;
                 rootContext = outerContext.rootContext;
-            } else {
-                rootContext = this;
             }
             ThreadLocalImpersonator.this.currentContextThreadLocal.set(this);
         }
@@ -123,6 +145,8 @@ public final class ThreadLocalImpersonator implements Impersonator {
                 // Oberste Ebene - keine anderer Context ist aktiv
                 ThreadLocalImpersonator.this.currentContextThreadLocal.remove();
             } else {
+                // Innere Ebene - weitere uebergeordnete
+                // Contexte sind aktiv:
                 ThreadLocalImpersonator.this.currentContextThreadLocal.set(this);
             }
         }

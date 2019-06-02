@@ -16,7 +16,7 @@ import java.util.function.Supplier;
  * <pre><code>
  * // Bis zu dieser Stelle werden die folgenden Datenbank-Statenments
  * // noch mit dem User alten User ausgefuehrt.
- * try (ImpersonationContext ctx1 = impersonator.impersonate("neuerUser")) {
+ * try (final ImpersonationContext ctx1 = impersonator.impersonate("neuerUser")) {
  *    // Die folgenden Datenbank-Statenments werden unter dem User
  *    // "neuerUser" ausgefuehrt.
  *    ...
@@ -62,7 +62,21 @@ import java.util.function.Supplier;
 public interface Impersonator {
 
     /**
-     * L&ouml;scht den aktuellen Zustand des ausf&uuml;hrenden Threads.
+     * Erzeugt einen neuen {@code Impersonator} aus einer Standard-Implementation.
+     *
+     * @param flushAllRunnable die Flush-Funktion um vorgelagerte potentielle Datenbank-
+     *                         &Auml;nderungen, die in der Vergangenheit aufgelaufen sind,
+     *                         anzuwenden bevor zu einem neuen User gewechselt werden soll
+     *                         (flushed).
+     * @return der neue {@code Impersonator}.
+     */
+    static Impersonator newImpersonator(final Runnable flushAllRunnable) {
+        return new ThreadLocalImpersonator(flushAllRunnable);
+    }
+
+    /**
+     * L&ouml;scht den aktuellen und tempor&auml;ren User des
+     * ausf&uuml;hrenden Threads.
      */
     void clear();
 
@@ -83,6 +97,10 @@ public interface Impersonator {
     /**
      * &Auml;ndert den User unter dem das angegebene Kommando
      * ausgef&uuml;hrt werden soll.
+     * <p>
+     * Bevor zu einem neuen User gewechselt wird, werden automatisch
+     * eventuelle vorgelagerte potentielle Datenbank-&Auml;nderungen,
+     * die in der Vergangenheit aufgelaufen sind, abgesetzt (flushed).
      * <p>
      * Beispiel:
      * <pre><code>
@@ -113,6 +131,10 @@ public interface Impersonator {
      * Beendet wird der tempor&auml;re Userwechsel mit der Methode
      * {@link ImpersonationContext#close()}.
      * <p>
+     * Bevor zu einem neuen User gewechselt wird, werden automatisch
+     * eventuelle vorgelagerte potentielle Datenbank-&Auml;nderungen,
+     * die in der Vergangenheit aufgelaufen sind, abgesetzt (flushed).
+     * <p>
      * Wird bei geschachtelten Kontext-Objekten nur das &auml;ssere
      * Kontext-Objekt geschlossen, dann werden automatisch alle inneren
      * Kontext-Objekte geschlossen.
@@ -122,7 +144,7 @@ public interface Impersonator {
      * <pre><code>
      * // Bis zu dieser Stelle werden die folgenden Datenbank-Statenments
      * // noch mit dem User alten User ausgefuehrt.
-     * try (ImpersonationContext ctx1 = impersonator.impersonate("neuerUser")) {
+     * try (final ImpersonationContext ctx1 = impersonator.impersonate("neuerUser")) {
      *    // Die folgenden Datenbank-Statenments werden unter dem User
      *    // "neuerUser" ausgefuehrt.
      *    ...
