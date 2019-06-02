@@ -17,6 +17,10 @@ public final class ThreadLocalImpersonator implements Impersonator {
 
     @Override
     public void clear() {
+        final Context context = this.currentContextThreadLocal.get();
+        if (context != null) {
+            context.rootContext.close();
+        }
         this.currentUserThreadLocal.remove();
         this.currentContextThreadLocal.remove();
     }
@@ -60,6 +64,7 @@ public final class ThreadLocalImpersonator implements Impersonator {
         final String currentUser;
         final String lastUser;
         Context innerContext;
+        Context rootContext;
         boolean isClosed;
 
         Context(final String runAsUser) {
@@ -101,6 +106,9 @@ public final class ThreadLocalImpersonator implements Impersonator {
             final Context outerContext = ThreadLocalImpersonator.this.currentContextThreadLocal.get();
             if (outerContext != null) {
                 outerContext.innerContext = this;
+                rootContext = outerContext.rootContext;
+            } else {
+                rootContext = this;
             }
             ThreadLocalImpersonator.this.currentContextThreadLocal.set(this);
         }
