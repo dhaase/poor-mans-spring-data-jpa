@@ -25,6 +25,12 @@ public final class ThreadLocalImpersonator implements Impersonator {
 
     @Override
     public void clear() {
+        final Context context = this.currentContextThreadLocal.get();
+        if (context != null) {
+            // Alle inneren Kontexte werden automatisch
+            // geschlossen.
+            context.rootContext.close();
+        }
         this.currentUserThreadLocal.remove();
         this.currentContextThreadLocal.remove();
     }
@@ -71,6 +77,7 @@ public final class ThreadLocalImpersonator implements Impersonator {
         final String currentUser;
         final String lastUser;
         Context innerContext;
+        Context rootContext;
         boolean isClosed;
 
         /**
@@ -116,10 +123,14 @@ public final class ThreadLocalImpersonator implements Impersonator {
 
         private void linkToOuterContext() {
             final Context outerContext = ThreadLocalImpersonator.this.currentContextThreadLocal.get();
-            if (outerContext != null) {
+            if (outerContext == null) {
+                // Oberste Ebene - keine anderer Context ist aktiv
+                rootContext = this;
+            } else {
                 // Innere Ebene - weitere uebergeordnete
                 // Contexte sind aktiv:
                 outerContext.innerContext = this;
+                rootContext = outerContext.rootContext;
             }
             ThreadLocalImpersonator.this.currentContextThreadLocal.set(this);
         }
