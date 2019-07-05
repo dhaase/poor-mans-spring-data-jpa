@@ -1,5 +1,6 @@
 package eu.dirk.haase.hibernate.cache.version_3_2;
 
+import eu.dirk.haase.hibernate.jdbc.ThreadLocalResourceRegistry;
 import org.hibernate.cache.Cache;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.Timestamper;
@@ -10,37 +11,42 @@ import java.util.Map;
 
 public class ThreadLocalMemoryCache implements Cache {
 
-    private final static ThreadLocal<Cache> threadLocalCache = ThreadLocal.withInitial(() -> new HashMapCache());
-
     private final String regionName;
+    private final ThreadLocalResourceRegistry<String, Cache> threadLocalCacheRegistry;
 
     public ThreadLocalMemoryCache(final String regionName) {
         this.regionName = regionName;
+        this.threadLocalCacheRegistry = ThreadLocalResourceRegistry.newInstance(ThreadLocalResourceRegistry.RefType.HARD);
     }
 
     @Override
     public void clear() throws CacheException {
-        threadLocalCache.get().clear();
+        final Cache cache = threadLocalCacheRegistry.computeIfAbsent(regionName, (k) -> new HashMapCache());
+        cache.clear();
     }
 
     @Override
     public void destroy() throws CacheException {
-        threadLocalCache.get().destroy();
+        final Cache cache = threadLocalCacheRegistry.computeIfAbsent(regionName, (k) -> new HashMapCache());
+        cache.destroy();
     }
 
     @Override
     public Object get(Object key) throws CacheException {
-        return threadLocalCache.get().get(key);
+        final Cache cache = threadLocalCacheRegistry.computeIfAbsent(regionName, (k) -> new HashMapCache());
+        return cache.get(key);
     }
 
     @Override
     public long getElementCountInMemory() {
-        return threadLocalCache.get().getElementCountInMemory();
+        final Cache cache = threadLocalCacheRegistry.computeIfAbsent(regionName, (k) -> new HashMapCache());
+        return cache.getElementCountInMemory();
     }
 
     @Override
     public long getElementCountOnDisk() {
-        return threadLocalCache.get().getElementCountOnDisk();
+        final Cache cache = threadLocalCacheRegistry.computeIfAbsent(regionName, (k) -> new HashMapCache());
+        return cache.getElementCountOnDisk();
     }
 
     @Override
@@ -50,42 +56,50 @@ public class ThreadLocalMemoryCache implements Cache {
 
     @Override
     public long getSizeInMemory() {
-        return threadLocalCache.get().getSizeInMemory();
+        final Cache cache = threadLocalCacheRegistry.computeIfAbsent(regionName, (k) -> new HashMapCache());
+        return cache.getSizeInMemory();
     }
 
     @Override
     public int getTimeout() {
-        return threadLocalCache.get().getTimeout();
+        final Cache cache = threadLocalCacheRegistry.computeIfAbsent(regionName, (k) -> new HashMapCache());
+        return cache.getTimeout();
     }
 
     @Override
     public void lock(Object key) throws CacheException {
-        threadLocalCache.get().lock(key);
+        final Cache cache = threadLocalCacheRegistry.computeIfAbsent(regionName, (k) -> new HashMapCache());
+        cache.lock(key);
     }
 
     @Override
     public long nextTimestamp() {
-        return threadLocalCache.get().nextTimestamp();
+        final Cache cache = threadLocalCacheRegistry.computeIfAbsent(regionName, (k) -> new HashMapCache());
+        return cache.nextTimestamp();
     }
 
     @Override
     public void put(Object key, Object value) throws CacheException {
-        threadLocalCache.get().put(key, value);
+        final Cache cache = threadLocalCacheRegistry.computeIfAbsent(regionName, (k) -> new HashMapCache());
+        cache.put(key, value);
     }
 
     @Override
     public Object read(Object key) throws CacheException {
-        return threadLocalCache.get().read(key);
+        final Cache cache = threadLocalCacheRegistry.computeIfAbsent(regionName, (k) -> new HashMapCache());
+        return cache.read(key);
     }
 
     @Override
     public void remove(Object key) throws CacheException {
-        threadLocalCache.get().remove(key);
+        final Cache cache = threadLocalCacheRegistry.computeIfAbsent(regionName, (k) -> new HashMapCache());
+        cache.remove(key);
     }
 
     @Override
     public Map toMap() {
-        return threadLocalCache.get().toMap();
+        final Cache cache = threadLocalCacheRegistry.computeIfAbsent(regionName, (k) -> new HashMapCache());
+        return cache.toMap();
     }
 
     public String toString() {
@@ -94,12 +108,14 @@ public class ThreadLocalMemoryCache implements Cache {
 
     @Override
     public void unlock(Object key) throws CacheException {
-        threadLocalCache.get().unlock(key);
+        final Cache cache = threadLocalCacheRegistry.computeIfAbsent(regionName, (k) -> new HashMapCache());
+        cache.unlock(key);
     }
 
     @Override
     public void update(Object key, Object value) throws CacheException {
-        threadLocalCache.get().update(key, value);
+        final Cache cache = threadLocalCacheRegistry.computeIfAbsent(regionName, (k) -> new HashMapCache());
+        cache.update(key, value);
     }
 
     /**
